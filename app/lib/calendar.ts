@@ -90,3 +90,36 @@ export async function openTicket(url: string): Promise<void> {
   const Linking = require("react-native").Linking;
   await Linking.openURL(url);
 }
+
+// Újratelepítés-barát "hozzáadva" állapot: végignézi a telefon naptárát,
+// és azt az eseményt tekinti hozzágadottnak, amelyiknek címe ÉS kezdőideje
+// (±5 perc) egyezik egy meglévő naptárbejegyzéssel.
+export async function syncAddedFromCalendar(events: SportEvent[]): Promise<Set<string>> {
+  const found = new Set<string>();
+  try {
+    const { granted } = await Calendar.getCalendarPermissions();
+    if (!granted) return found;
+
+    const calendars = await Calendar.getCalendars();
+    if (!calendars.length) return found;
+
+    const now = Date.now();
+    const windowStart = new Date(now - 365 * 86400000);
+    const windowEnd = new Date(now + 2 * 365 * 86400000);
+    const existing = await Calendar.listEvents(calendars, windowStart, windowEnd);
+
+    for (const ev of events) {
+      const target = new Date(ev.startsAt).getTime();
+      const match = existing.some(
+        (c) =>
+          c.title === ev.title &&
+          c.startDate != null &&
+          Math.abs(new Date(c.startDate).getTime() - target) < 5 * 60 * 1000
+      );
+      if (match) found.add(ev.id);
+    }
+  } catch {
+    // olvasási hiba esetén marad a lokálisan tárolt állapot
+  }
+  return found;
+}

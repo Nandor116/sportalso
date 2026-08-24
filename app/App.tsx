@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   Pressable,
   RefreshControl,
   ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   View,
@@ -19,7 +19,7 @@ import {
   APP_NAME,
 } from "./config";
 import { EventList, SportEvent, fetchAndVerify, loadCached, lastSync } from "./lib/data";
-import { addToCalendar, openTicket, shareIcs } from "./lib/calendar";
+import { addToCalendar, openTicket, shareIcs, syncAddedFromCalendar } from "./lib/calendar";
 
 const ADDED_KEY = "sportalso.addedIds";
 
@@ -37,6 +37,27 @@ function fmtDate(iso: string): string {
   return `${day}, ${rest}, ${time}`;
 }
 
+const monthFormatter = new Intl.DateTimeFormat("hu-HU", { year: "numeric", month: "long" });
+
+type Section = { title: string; data: SportEvent[] };
+
+function groupByMonth(events: SportEvent[]): Section[] {
+  const map = new Map<string, SportEvent[]>();
+  for (const ev of events) {
+    const d = new Date(ev.startsAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const bucket = map.get(key);
+    if (bucket) bucket.push(ev);
+    else map.set(key, [ev]);
+  }
+  return [...map.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, data]) => ({
+      title: monthFormatter.format(new Date(`${key}-01T12:00:00`)),
+      data,
+    }));
+}
+
 export default function App() {
   const [list, setList] = useState<EventList | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,12 +66,28 @@ export default function App() {
   const [synced, setSynced] = useState<string | null>(null);
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  async function syncAdded(events: SportEvent[]) {
+    const found = await syncAddedFromCalendar(events);
+    if (!found.size) return;
+    setAdded((prev) => {
+      const next = new Set(prev);
+      for (const id of found) next.add(id);
+      AsyncStorage.setItem(ADDED_KEY, JSON.stringify([...next])).catch(() => {});
+      return next;
+    });
+  }
 
   const applyFetched = useCallback(async () => {
     const res = await fetchAndVerify();
-    if (res.list) setList(res.list);
+    if (res.list) {
+      setList(res.list);
+      void syncAdded(res.list.events);
+    }
     setError(res.error ?? null);
     setSynced(await lastSync());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -91,6 +128,29 @@ export default function App() {
   const upcoming = (list?.events ?? [])
     .filter((e) => new Date(e.startsAt) >= startOfToday())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+  const sections = groupByMonth(upcoming);
+  const missingCount = upcoming.filter((e) => !added.has(e.id)).length;
+
+  async function addAllUpcoming() {
+    let err: string | null = null;
+    setBulkBusy(true);
+    try {
+      for (const ev of upcoming) {
+        if (added.has(ev.id)) continue;
+        try {
+          await addToCalendar(ev);
+          await markAdded(ev.id);
+        } catch (e: any) {
+          err = e?.message ?? String(e);
+          break;
+        }
+      }
+    } finally {
+      setBulkBusy(false);
+      setError(err);
+    }
+  }
 
   // ---------- export / import / backup ----------
 
@@ -157,19 +217,18 @@ export default function App() {
     const isAdded = added.has(ev.id);
     return (
       <View style={styles.row}>
-        <Text style={styles.date}>{fmtDate(ev.startsAt)}</Text>
         <Text style={styles.title}>{ev.title}</Text>
         {!!ev.note && <Text style={styles.note}>{ev.note}</Text>}
+        <View style={styles.dateRow}>
+          <Text style={styles.date}>{fmtDate(ev.startsAt)}</Text>
+          {isAdded && <Text style={styles.addedBadge}>✓ naptárban</Text>}
+        </View>
         <View style={styles.actions}>
-          <Pressable
-            style={[styles.btn, isAdded ? styles.btnDone : styles.btnPrimary]}
-            onPress={() => (isAdded ? undefined : onAdd(ev))}
-            disabled={isAdded}
-          >
-            <Text style={[styles.btnText, isAdded ? styles.btnTextDone : styles.btnTextPrimary]}>
-              {isAdded ? "✓ Naptárban" : "Naptárba"}
-            </Text>
-          </Pressable>
+          {!isAdded && (
+            <Pressable style={[styles.btn, styles.btnPrimary]} onPress={() => onAdd(ev)}>
+              <Text style={styles.btnTextPrimary}>Naptárba</Text>
+            </Pressable>
+          )}
           {!!ev.ticketUrl && (
             <Pressable style={styles.btn} onPress={() => openTicket(ev.ticketUrl!)}>
               <Text style={styles.btnText}>Jegyek</Text>
@@ -198,10 +257,13 @@ export default function App() {
           <ActivityIndicator />
         </View>
       ) : (
-        <FlatList
-          data={upcoming}
+        <SectionList
+          sections={sections}
           keyExtractor={(e) => e.id}
           renderItem={({ item }) => <Row ev={item} />}
+          renderSectionHeader={({ section }) => (
+            <Text style={styles.sectionHeader}>{section.title}</Text>
+          )}
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl
@@ -221,6 +283,17 @@ export default function App() {
           }
           ListFooterComponent={
             <View style={styles.footer}>
+              {missingCount > 1 && (
+                <Pressable
+                  style={[styles.btn, styles.btnBlock, styles.btnPrimary]}
+                  disabled={bulkBusy}
+                  onPress={() => void addAllUpcoming()}
+                >
+                  <Text style={styles.btnTextPrimary}>
+                    {bulkBusy ? "Hozzáadás folyamatban..." : `Összes hozzáadása a naptárhoz (${missingCount})`}
+                  </Text>
+                </Pressable>
+              )}
               {!!error && <Text style={styles.error}>{error}</Text>}
               <Text style={styles.muted}>
                 {synced
@@ -278,7 +351,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fafbfc",
   },
   date: { color: green, fontWeight: "600", fontSize: 13, textTransform: "capitalize" },
-  title: { fontSize: 18, fontWeight: "700", marginTop: 4 },
+  dateRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+  addedBadge: { color: green, fontSize: 12, fontWeight: "700" },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#57606a",
+    textTransform: "uppercase",
+    paddingTop: 10,
+    paddingBottom: 6,
+    paddingHorizontal: 2,
+  },
+  title: { fontSize: 18, fontWeight: "700" },
   note: { fontSize: 14, color: "#57606a", marginTop: 2 },
   actions: { flexDirection: "row", gap: 8, marginTop: 12 },
   btn: {
