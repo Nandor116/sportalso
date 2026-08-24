@@ -12,7 +12,18 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSCalendarsWriteOnlyAccessDescription": "A koncertek naptárba mentéséhez.",
-        "NSCalendarsFullAccessDescription": "A koncertek naptárba mentéséhez."
+        "NSCalendarsFullAccessDescription": "A koncertek naptárba mentéséhez.",
+        "UIApplicationSceneManifest": {
+          "UIApplicationSupportsMultipleScenes": false,
+          "UISceneConfigurations": {
+            "UIWindowSceneSessionRoleApplication": [
+              {
+                "UISceneConfigurationName": "Default",
+                "UISceneDelegateClassName": "$(PRODUCT_MODULE_NAME).SceneDelegate"
+              }
+            ]
+          }
+        }
       }
     },
     "android": {

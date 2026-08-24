@@ -58,11 +58,16 @@ keys/private.key ──► admin/index.html (böngésző) ──► events.json 
 4. **Az App Store-beli Expo Go SDK 54-nél ragadt** → az SDK 57-es app iOS-en csak Simulatorban futtatható:
    Xcode-beta telepítve, iPhone 17 Pro szimulátor. `cd app && npx expo start`, majd `i`.
 5. **`npx expo prebuild` ÚJRAGENERÁLJA** az `android/` és `ios/` mappákat → minden prebuild után:
-   - Android: futtasd a `scripts/apply-android-signing.sh`-t (visszaírja a release-aláírást)
-   - iOS: `pod install` az `ios/` mappában
-6. **App ikon Expo Go-ban NEM látszik** (az Expo Go saját ikonja van) — csak standalone buildben.
-7. Az admin közvetlenül committol a repóba → lokális push előtt lehet, hogy `git pull --rebase origin main` kell.
-8. Ékezetes app-név ("Sportalsó") miatt az Xcode projekt neve `Sportals` (levágta) — workspace: `ios/Sportals.xcworkspace`.
+   - Android: futtasd a `scripts/apply-android-signing.sh`-t (visszaírja a release-aláírást + arm64-only ABI)
+   - iOS: `pod install` az `ios/` mappában **és** futtasd a `scripts/apply-ios-scene.sh`-t
+6. **iOS scene-lifecycle KÖTELEZŐ**: az új iOS SDK (26+) azonnal kilépti az appot ("NoSceneLifecycleAdoption"
+   trap), ha nincs UIScene támogatás — az Expo-sablonból ez hiányzik! A javítás két részből áll:
+   a) app.json `ios.infoPlist.UIApplicationSceneManifest` (prebuild beírja a plistbe)
+   b) `scripts/apply-ios-scene.sh` → scene-aware AppDelegate.swift + SceneDelegate osztály.
+     TÜNET volt: app indítás után ~4 mp-rel EXC_BREAKPOINT-tal elszállt (szimulátorban is reprodukálható).
+7. **App ikon Expo Go-ban NEM látszik** (az Expo Go saját ikonja van) — csak standalone buildben.
+8. Az admin közvetlenül committol a repóba → lokális push előtt lehet, hogy `git pull --rebase origin main` kell.
+9. Ékezetes app-név ("Sportalsó") miatt az Xcode projekt neve `Sportals` (levágta) — workspace: `ios/Sportals.xcworkspace`.
 
 ## Build környezet
 
@@ -89,7 +94,7 @@ keys/private.key ──► admin/index.html (böngésző) ──► events.json 
    ```
 5. **Unsigned IPA**:
    ```sh
-   cd app/ios && pod install && cd ..
+   cd app/ios && pod install && /Users/nandor/Documents/sportalso/scripts/apply-ios-scene.sh && cd ..
    xcodebuild -workspace ios/Sportals.xcworkspace -scheme Sportals -configuration Release \
      -destination 'generic/platform=iOS' -archivePath build/Sportalso.xcarchive archive \
      CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
@@ -119,6 +124,8 @@ npx expo start    # aztán 'i' = iPhone 17 Pro szimulátor (SDK 57-es Expo Go-t 
 - ✅ Koncertek-stílusú UI: hónap-szekciók, "✓ naptárban" jelvény, bulk hozzáadás, naptár-szinkron
 - ✅ App ikonok lecserélve (`~/Downloads/sportalso.jpg` alapján)
 - ✅ v0.0.1 build elkészült: `builds/Sportalso-0.0.1.apk` (67 MB, 4 ABI) + `Sportalso-0.0.1-unsigned.ipa` (9 MB)
+- ✅ iOS azonnali crash MEGVAN és JAVÍTVA (hiányzó UIScene lifecycle; lásd fogdák #6)
+  → javított `builds/Sportalso-0.0.1-unsigned.ipa` kész (szimulátorban verifikálva: él a folyamat)
 - ⏳ Következő verzió (0.0.2): már csak arm64-v8a APK-t buildelni (a szkript ezt intézi)
 - ⏳ A barát teszteli az appot; szimulátoros UI-teszt folyamatban
 
