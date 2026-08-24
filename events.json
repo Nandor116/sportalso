@@ -1,13 +1,13 @@
 {
-  "version": 1,
-  "generatedAt": "2026-08-24T18:29:22.926Z",
+  "version": 2,
+  "generatedAt": "2026-08-24T18:30:40.334Z",
   "events": [
     {
-      "id": "a11a80",
-      "title": "ASD",
-      "startsAt": "2026-09-15T18:00:00.000Z",
-      "ticketUrl": "tixa.hu",
-      "note": "asdasdas"
+      "id": "abc123",
+      "title": "asdadd",
+      "startsAt": "2026-08-25T18:00:00.000Z",
+      "ticketUrl": "https://tixa.hu",
+      "note": "asdasdasd"
     }
   ]
 }
