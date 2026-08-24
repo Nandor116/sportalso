@@ -9,3 +9,8 @@ perl -0pi -e "s/keyPassword 'android'\n        \}\n    \}/keyPassword 'android'\
 perl -0pi -e 's/\Q            \/\/ Caution! In production, you need to generate your own keystore file.\E\n\s*\/\/ see https:\/\/reactnative\.dev\/docs\/signed-apk-android\.\n\s*signingConfig signingConfigs\.debug/            signingConfig signingConfigs.release/s' build.gradle
 
 grep -q "keyAlias 'sportalso'" build.gradle && grep -q "signingConfig signingConfigs.release" build.gradle && echo "Aláírás konfigurálva ✓" || { echo "HIBA: a patch nem illeszkedett"; exit 1; }
+
+# Csak arm64 build (a 4 ABI-s APK ~67 MB volt, így ~20-25 MB lesz)
+perl -pi -e 's/^reactNativeArchitectures=.*/reactNativeArchitectures=arm64-v8a/' ../gradle.properties
+grep -q "^reactNativeArchitectures=" ../gradle.properties || echo "reactNativeArchitectures=arm64-v8a" >> ../gradle.properties
+echo "ABI: $(grep '^reactNativeArchitectures=' ../gradle.properties)"

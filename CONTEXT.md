@@ -79,6 +79,8 @@ keys/private.key ──► admin/index.html (böngésző) ──► events.json 
 4. **APK**:
    ```sh
    scripts/apply-android-signing.sh          # KÖTELEZŐ prebuild után!
+   # (a release-aláíráson túl beállítja: reactNativeArchitectures=arm64-v8a → ~20-25 MB APK
+   #  0.0.1 még 4 ABI-vel készült, ezért volt 67 MB — 0.0.2-től arm64-only)
    cd app/android
    JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home" \
    ANDROID_HOME=/opt/homebrew/share/android-commandlinetools \
@@ -116,7 +118,8 @@ npx expo start    # aztán 'i' = iPhone 17 Pro szimulátor (SDK 57-es Expo Go-t 
 - ✅ Admin unlock-gate (titkos kulccsal nyitható fel)
 - ✅ Koncertek-stílusú UI: hónap-szekciók, "✓ naptárban" jelvény, bulk hozzáadás, naptár-szinkron
 - ✅ App ikonok lecserélve (`~/Downloads/sportalso.jpg` alapján)
-- ✅ v0.0.1 build elkészült: `builds/Sportalso-0.0.1.apk` (67 MB) + `Sportalso-0.0.1-unsigned.ipa` (9 MB)
+- ✅ v0.0.1 build elkészült: `builds/Sportalso-0.0.1.apk` (67 MB, 4 ABI) + `Sportalso-0.0.1-unsigned.ipa` (9 MB)
+- ⏳ Következő verzió (0.0.2): már csak arm64-v8a APK-t buildelni (a szkript ezt intézi)
 - ⏳ A barát teszteli az appot; szimulátoros UI-teszt folyamatban
 
 ## Nyitott kérdések / jövőbeli tervek
