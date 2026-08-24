@@ -1,4 +1,4 @@
-export const DATA_BASE_URL = "https://USERNAME.github.io/repo"; // TODO: a Publikált GitHub Pages URL cseréje, pl. https://nandor123.github.io/sportalso
+export const DATA_BASE_URL = "https://nandor116.github.io/sportalso";
 export const EVENTS_PATH = "/events.json";
 export const SIG_PATH = "/events.sig";
 
