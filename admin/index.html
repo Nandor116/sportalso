@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportalsó — Admin</title>
+<script src="tweetnacl.min.js"></script>
+<style>
+  :root { --green:#1a7f37; --bg:#f6f8fa; --line:#d0d7de; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; margin:0; background:#fff; color:#1f2328; }
+  header { background:var(--green); color:#fff; padding:14px 16px; font-weight:700; font-size:18px; }
+  main { max-width:720px; margin:0 auto; padding:16px; padding-bottom:90px; }
+  section { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; background:var(--bg); }
+  h2 { margin:0 0 10px; font-size:15px; }
+  label { display:block; font-size:12px; color:#57606a; margin:8px 0 3px; }
+  input[type=text], input[type=password], input[type=datetime-local], input[type=url] {
+    width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px; background:#fff;
+  }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  button {
+    padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:#fff;
+    font-size:15px; cursor:pointer; font-weight:600;
+  }
+  button.primary { background:var(--green); border-color:var(--green); color:#fff; }
+  button.danger { color:#cf222e; border-color:#cf222e; background:#fff; }
+  button.small { padding:5px 10px; font-size:13px; }
+  .event { border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:10px; background:#fff; }
+  .status { position:fixed; left:0; right:0; bottom:0; background:#1f2328; color:#fff;
+    padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; }
+  .ok { color:#7ee787; } .err { color:#ffa198; }
+  .muted { color:#57606a; font-size:12px; }
+  details summary { cursor:pointer; font-size:14px; font-weight:600; }
+</style>
+</head>
+<body>
+<header>Sportalsó — koncert admin</header>
+<main>
+
+  <details id="setupBox">
+    <summary>⚙️ Beállítások (egyszer kell)</summary>
+    <section style="margin-top:10px">
+      <label>GitHub repo (pl. valaki/sportalso)</label>
+      <input type="text" id="repo" placeholder="felhasznalo/sportalso">
+      <div class="row">
+        <div><label>Branch</label><input type="text" id="branch" value="main"></div>
+        <div><label>Fájl útvonal</label><input type="text" id="path" value="events.json"></div>
+      </div>
+      <label>Fine-grained token (Contents: Read and Write)</label>
+      <input type="password" id="token" placeholder="github_pat_...">
+      <label>Titkos kulcs (HEX) — fájl vagy beillesztés</label>
+      <input type="file" id="keyfile" accept=".key,.txt" style="margin-top:4px">
+      <textarea id="keyhex" rows="2" placeholder="64 bájt hex..." style="width:100%;font-family:monospace;margin-top:4px;border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
+      <label style="display:flex;gap:6px;align-items:center;margin-top:6px">
+        <input type="checkbox" id="remember"> megjegyzés ezen a készüléken (csak saját telefonon!)
+      </label>
+      <button class="small" id="saveSetup" style="margin-top:8px">Beállítások mentése</button>
+      <p class="muted">A kulcs és a token alapból csak a munkamenetben él (nem tárolódik). A „megjegyzés” pipával localStorage-ba kerül — ezt csak olyan eszközön pipáld be, ami nálad biztonságban van.</p>
+    </section>
+  </details>
+
+  <section>
+    <h2>Koncertek</h2>
+    <div id="events"></div>
+    <button class="small" id="addEvent">+ Új koncert</button>
+  </section>
+
+  <div class="row">
+    <button class="primary" id="publish">Publikálás</button>
+    <button id="download">Letöltés kézi feltöltéshez</button>
+    <button id="reload">Úratöltés a szerverről</button>
+  </div>
+  <p class="muted" id="serverInfo"></p>
+
+</main>
+<div class="status"><span id="statusText">Kész.</span></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let events = [];
+let serverVersion = 0;
+
+function setStatus(msg, cls) {
+  $("statusText").textContent = msg;
+  $("statusText").className = cls || "";
+}
+
+// ---------- setup persistence ----------
+function loadSetup() {
+  const s = JSON.parse(localStorage.getItem("sportalso_admin") || "{}");
+  if (s.repo) $("repo").value = s.repo;
+  if (s.branch) $("branch").value = s.branch;
+  if (s.path) $("path").value = s.path;
+  if (s.token && s.remember) $("token").value = s.token;
+  if (s.keyhex && s.remember) $("keyhex").value = s.keyhex;
+  if (s.remember) $("remember").checked = true;
+}
+$("saveSetup").onclick = () => {
+  const remember = $("remember").checked;
+  localStorage.setItem("sportalso_admin", JSON.stringify({
+    repo: $("repo").value.trim(),
+    branch: $("branch").value.trim() || "main",
+    path: $("path").value.trim() || "events.json",
+    token: remember ? $("token").value.trim() : "",
+    keyhex: remember ? $("keyhex").value.trim() : "",
+    remember
+  }));
+  setStatus("Beállítások mentve.", "ok");
+};
+loadSetup();
+
+function cfg() {
+  return {
+    repo: $("repo").value.trim(),
+    branch: $("branch").value.trim() || "main",
+    path: $("path").value.trim() || "events.json",
+    token: $("token").value.trim(),
+    keyhex: $("keyhex").value.trim()
+  };
+}
+
+$("keyfile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  f.text().then(t => { $("keyhex").value = t.trim(); });
+});
+
+// ---------- event editor ----------
+function newEvent() {
+  const d = new Date(Date.now() + 7 * 86400000);
+  d.setHours(20, 0, 0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  return {
+    id: Array.from(nacl.randomBytes(4)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 6),
+    title: "",
+    startsAtLocal: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    ticketUrl: "",
+    note: ""
+  };
+}
+
+function render() {
+  const box = $("events");
+  box.innerHTML = "";
+  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints az „+ Új koncert” gombra.</p>';
+  events.forEach((ev, i) => {
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerHTML = `
+      <div class="row">
+        <div><label>Cím</label><input type="text" data-f="title" value=""></div>
+        <div style="max-width:220px"><label>Dátum-idő</label><input type="datetime-local" data-f="startsAtLocal" value=""></div>
+      </div>
+      <div class="row">
+        <div><label>Jegylink (opcionális)</label><input type="url" data-f="ticketUrl" placeholder="https://..."></div>
+        <div><label>Megjegyzés (opcionális)</label><input type="text" data-f="note"></div>
+      </div>
+      <div style="text-align:right;margin-top:6px">
+        <span class="muted">id: ${ev.id}</span>
+        <button class="danger small" data-del="${i}">Törlés</button>
+      </div>`;
+    div.querySelector('[data-f=title]').value = ev.title;
+    div.querySelectorAll("[data-f]").forEach(inp => {
+      inp.value = ev[inp.dataset.f] ?? "";
+      inp.addEventListener("input", () => { ev[inp.dataset.f] = inp.value; });
+    });
+    div.querySelector("[data-del]").onclick = () => { events.splice(i, 1); render(); };
+    box.appendChild(div);
+  });
+}
+$("addEvent").onclick = () => { events.push(newEvent()); render(); };
+
+// ---------- serialization & signing ----------
+function buildPayload() {
+  const clean = events
+    .filter(e => e.title.trim())
+    .sort((a, b) => new Date(a.startsAtLocal) - new Date(b.startsAtLocal))
+    .map(e => ({
+      id: e.id,
+      title: e.title.trim(),
+      startsAt: new Date(e.startsAtLocal).toISOString(),
+      ...(e.ticketUrl.trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
+      ...(e.note.trim() ? { note: e.note.trim() } : {})
+    }));
+  return JSON.stringify({ version: serverVersion + 1, generatedAt: new Date().toISOString(), events: clean }, null, 2) + "\n";
+}
+
+async function sign(jsonText) {
+  const { keyhex } = cfg();
+  if (!/^[0-9a-fA-F]{128}$/.test(keyhex)) throw new Error("A titkos kulcs nem tűnik érvényesnek (128 hex karakter kell).");
+  const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
+  const sig = nacl.sign.detached(new TextEncoder().encode(jsonText), secret);
+  return btoa(String.fromCharCode(...sig));
+}
+
+// ---------- github api ----------
+async function ghGet(path) {
+  const { repo, branch, token } = cfg();
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`GitHub GET ${path}: ${r.status}`);
+  return r.json();
+}
+async function ghPut(path, text, sha, message) {
+  const { repo, branch, token } = cfg();
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      branch,
+      sha,
+      content: btoa(unescape(encodeURIComponent(text)))
+    })
+  });
+  if (!r.ok) throw new Error(`GitHub PUT ${path}: ${r.status} ${await r.text()}`);
+  return r.json();
+}
+
+async function fetchFromServer() {
+  const { repo, branch, path } = cfg();
+  if (!repo) throw new Error("Előbb állítsd be a repót!");
+  const meta = await ghGet(path);
+  if (!meta) {
+    events = []; serverVersion = 0;
+    $("serverInfo").textContent = "A szerveren még nincs events.json — az első publikálás létrehozza.";
+    render(); return;
+  }
+  const jsonText = atob(meta.content.replace(/\n/g, ""));
+  const sigMeta = await ghGet(path.replace(/\.json$/, ".sig"));
+  let verified = false;
+  try {
+    const pubHex = window.SPORTALSO_PUBLIC_KEY || "";
+    if (sigMeta && /^[0-9a-fA-F]{64}$/.test(pubHex)) {
+      const pub = new Uint8Array(pubHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+      const sig = Uint8Array.from(atob(atob(sigMeta.content.replace(/\n/g, ""))), c => c.charCodeAt(0));
+      verified = nacl.sign.detached.verify(new TextEncoder().encode(jsonText), sig, pub);
+    }
+  } catch (_) {}
+  const data = JSON.parse(jsonText);
+  serverVersion = data.version || 0;
+  events = (data.events || []).map(e => ({
+    ...e,
+    startsAtLocal: new Date(e.startsAt).toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16)
+  }));
+  $("serverInfo").textContent =
+    `Szerver: version ${serverVersion}, ${events.length} koncert` + (verified ? " • aláírás ✓" : "");
+  render();
+}
+
+// ---------- actions ----------
+$("reload").onclick = async () => {
+  try { await fetchFromServer(); setStatus("Lista frissítve a szerverről.", "ok"); }
+  catch (e) { setStatus("Hiba: " + e.message, "err"); }
+};
+
+$("publish").onclick = async () => {
+  try {
+    const { token } = cfg();
+    if (!token) throw new Error("Token nélkül csak a Letöltés gombbal tudsz publikálni.");
+    const json = buildPayload();
+    const sig = await sign(json);
+    setStatus("Publikálás folyamatban...");
+    const metaJson = await ghGet(cfg().path);
+    const sigPath = cfg().path.replace(/\.json$/, ".sig");
+    const metaSig = await ghGet(sigPath);
+    await ghPut(cfg().path, json, metaJson ? metaJson.sha : undefined,
+      `Koncert lista frissítés (v${serverVersion + 1})`);
+    await ghPut(sigPath, sig + "\n", metaSig ? metaSig.sha : undefined,
+      `Aláírás (v${serverVersion + 1})`);
+    serverVersion += 1;
+    setStatus("Kész! A frissítés már fent van a szerveren. ✓", "ok");
+    await fetchFromServer();
+  } catch (e) {
+    setStatus("Hiba: " + e.message, "err");
+  }
+};
+
+$("download").onclick = async () => {
+  try {
+    const json = buildPayload();
+    const sig = await sign(json);
+    const dl = (name, content) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
+      a.download = name; a.click();
+    };
+    dl("events.json", json);
+    setTimeout(() => dl("events.sig", sig + "\n"), 400);
+    setStatus("Két fájl letöltve: töltsd fel őket kézzel a repóba (ugyanarra a helyre).", "ok");
+  } catch (e) { setStatus("Hiba: " + e.message, "err"); }
+};
+
+render();
+setStatus("Kész.");
+</script>
+
+<!-- Az appba épített nyilvános kulcs HEX-ben ide másolandó a szerver-oldali ellenőrzéshez: -->
+<script>window.SPORTALSO_PUBLIC_KEY = "9a1daf86b8f836c03a25a9c835f33ec21c8c52e4288d2d2e09c825b305234860";</script>
+</body>
+</html>

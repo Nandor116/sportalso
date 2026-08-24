@@ -1,0 +1,18 @@
+{
+  "name": "sportalso",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node scripts/test-roundtrip.js",
+    "verify": "node scripts/verify.js",
+    "generate-keys": "node keys/generate-keys.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  }
+}

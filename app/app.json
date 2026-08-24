@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Sportalsó",
+    "slug": "sportalso",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "hu.sportalso.app",
+      "infoPlist": {
+        "NSCalendarsWriteOnlyAccessDescription": "A koncertek naptárba mentéséhez.",
+        "NSCalendarsFullAccessDescription": "A koncertek naptárba mentéséhez."
+      }
+    },
+    "android": {
+      "package": "hu.sportalso.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1a7f37",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.READ_CALENDAR"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "A koncertek naptárba mentéséhez."
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "writePermission": true
+        }
+      ]
+    ]
+  }
+}
