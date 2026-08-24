@@ -59,18 +59,27 @@
     </section>
   </details>
 
-  <section>
-    <h2>Koncertek</h2>
-    <div id="events"></div>
-    <button class="small" id="addEvent">+ Új koncert</button>
+  <section id="lockedBox">
+    <h2>🔒 Zárolt szerkesztő</h2>
+    <p class="muted">Az eseménylistát csak titkos kulccsal lehet aláírni — a kulcs birtoklása a &bdquo;belépés&rdquo;.
+    Nyisd a Beállításokat és töltsd be a kulcsot (fájlból vagy beillesztve); az oldal ellenőrzi,
+    hogy ez-e a jó kulcs, és csak akkor enged szerkeszteni.</p>
   </section>
 
-  <div class="row">
-    <button class="primary" id="publish">Publikálás</button>
-    <button id="download">Letöltés kézi feltöltéshez</button>
-    <button id="reload">Úratöltés a szerverről</button>
+  <div id="adminUi" style="display:none">
+    <section>
+      <h2>Koncertek</h2>
+      <div id="events"></div>
+      <button class="small" id="addEvent">+ Új koncert</button>
+    </section>
+
+    <div class="row">
+      <button class="primary" id="publish">Publikálás</button>
+      <button id="download">Letöltés kézi feltöltéshez</button>
+      <button id="reload">Úratöltés a szerverről</button>
+    </div>
+    <p class="muted" id="serverInfo"></p>
   </div>
-  <p class="muted" id="serverInfo"></p>
 
 </main>
 <div class="status"><span id="statusText">Kész.</span></div>
@@ -109,6 +118,30 @@ $("saveSetup").onclick = () => {
 };
 loadSetup();
 
+// ---------- kulcs-alapú feloldás ----------
+// A titkos kulcsból kiszámoljuk a hozzá tartozó nyilvános kulcsot;
+// ha egyezik az appba építettel, a kulcs jó -> szerkesztő feloldva.
+function setAdminUi(open) {
+  $("adminUi").style.display = open ? "" : "none";
+  $("lockedBox").style.display = open ? "none" : "";
+}
+let unlocked = false;
+function tryUnlock() {
+  const keyhex = $("keyhex").value.trim();
+  let ok = false;
+  if (/^[0-9a-fA-F]{128}$/.test(keyhex)) {
+    const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
+    const pubHex = Array.from(nacl.sign.keyPair.fromSecretKey(secret).publicKey)
+      .map(b => b.toString(16).padStart(2, "0")).join("");
+    ok = pubHex === (window.SPORTALSO_PUBLIC_KEY || "").toLowerCase();
+  }
+  setAdminUi(ok);
+  if (ok && !unlocked) setStatus("✓ Kulcs elfogadva — admin mód aktív.", "ok");
+  if (!ok && unlocked) setStatus("Kulcs eltávolítva — zárolva.", "");
+  unlocked = ok;
+}
+$("keyhex").addEventListener("input", tryUnlock);
+
 function cfg() {
   return {
     repo: $("repo").value.trim(),
@@ -122,7 +155,7 @@ function cfg() {
 $("keyfile").addEventListener("change", e => {
   const f = e.target.files[0];
   if (!f) return;
-  f.text().then(t => { $("keyhex").value = t.trim(); });
+  f.text().then(t => { $("keyhex").value = t.trim(); tryUnlock(); });
 });
 
 // ---------- event editor ----------
@@ -294,6 +327,7 @@ $("download").onclick = async () => {
 };
 
 render();
+tryUnlock();
 setStatus("Kész.");
 </script>
 
