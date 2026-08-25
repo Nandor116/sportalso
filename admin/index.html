@@ -26,6 +26,10 @@
   button.danger { color:#cf222e; border-color:#cf222e; background:#fff; }
   button.small { padding:5px 10px; font-size:13px; }
   .event { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px; background:#fff; }
+  .section-heading { font-size:13px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+  .past-section { border:1px solid var(--line); border-radius:8px; margin-top:12px; }
+  .past-section summary { padding:10px 12px; font-weight:600; font-size:14px; color:#57606a; cursor:pointer; }
+  .past-section .event { margin:0 10px 10px; }
   .status { position:fixed; left:0; right:0; bottom:0; background:#1f2328; color:#fff;
     padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; z-index:999; }
   .ok { color:#7ee787; } .err { color:#ffa198; }
@@ -262,7 +266,7 @@ async function loadDashboardData() {
     const { path } = cfg();
     const meta = await ghGet(path);
     if (meta) {
-      const jsonText = atob(meta.content.replace(/\n/g, ""));
+  const jsonText = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ""))));
       const data = JSON.parse(jsonText);
       const count = (data.events || []).length;
       $("tileEventsDesc").textContent = `${count} esemény`;
@@ -396,9 +400,9 @@ function render() {
     box.innerHTML = '<p class="muted">Még nincs esemény. Kattints a "+ Új esemény" gombra.</p>';
     return;
   }
-  const now = new Date().toISOString();
-  const upcoming = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") >= now.slice(0, 16));
-  const past = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") < now.slice(0, 16));
+  const nowLocal = new Date().toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16);
+  const upcoming = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") >= nowLocal);
+  const past = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") < nowLocal);
 
   if (upcoming.length) {
     const h = document.createElement("h3");
@@ -524,7 +528,7 @@ async function fetchFromServer() {
     $("serverInfo").textContent = "Még nincs events.json \u2014 az első publikálás létrehozza.";
     render(); return;
   }
-  const jsonText = atob(meta.content.replace(/\n/g, ""));
+  const jsonText = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ""))));
   const sigMeta = await ghGet(path.replace(/\.json$/, ".sig"));
   let verified = false;
   try {
