@@ -13,6 +13,8 @@ export type SportEvent = {
   startsAt: string; // UTC ISO
   ticketUrl?: string;
   note?: string;
+  imageUrl?: string;
+  description?: string;
 };
 
 export type EventList = {

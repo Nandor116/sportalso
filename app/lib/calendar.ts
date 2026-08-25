@@ -1,6 +1,4 @@
 import * as Calendar from "expo-calendar";
-import { File, Paths } from "expo-file-system";
-import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 import type { SportEvent } from "./data";
 import { VENUE, VENUE_ADDRESS } from "../config";
@@ -44,46 +42,6 @@ export async function addToCalendar(ev: SportEvent): Promise<void> {
     location,
     notes: ev.note ?? "",
   });
-}
-
-function icsEscape(s: string): string {
-  return s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
-}
-
-export async function shareIcs(ev: SportEvent): Promise<void> {
-  const start = new Date(ev.startsAt);
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const location = [VENUE, VENUE_ADDRESS].filter(Boolean).join(", ");
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//sportalso//hu",
-    "BEGIN:VEVENT",
-    `UID:${ev.id}@sportalso`,
-    `DTSTAMP:${fmt(new Date())}`,
-    `DTSTART:${fmt(start)}`,
-    `DTEND:${fmt(end)}`,
-    `SUMMARY:${icsEscape(ev.title)}`,
-    ...(location ? [`LOCATION:${icsEscape(location)}`] : []),
-    ...(ev.note ? [`DESCRIPTION:${icsEscape(ev.note)}`] : []),
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-
-  if (!(await Sharing.isAvailableAsync())) throw new Error("A megosztás nem elérhető.");
-
-  const file = new File(Paths.cache, `${ev.id}.ics`);
-  file.write(ics);
-  try {
-    await Sharing.shareAsync(file.uri, {
-      mimeType: "text/calendar",
-      dialogTitle: "Koncert naptárba mentése",
-      UTI: "com.apple.ical.ics",
-    });
-  } finally {
-    if (file.exists) file.delete();
-  }
 }
 
 export async function openTicket(url: string): Promise<void> {

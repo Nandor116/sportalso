@@ -2,19 +2,19 @@
   "expo": {
     "name": "Sportalsó",
     "slug": "sportalso",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1a7f37"
+      "backgroundColor": "#653071"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "hu.sportalso.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSCalendarsWriteOnlyAccessDescription": "A koncertek naptárba mentéséhez.",
         "NSCalendarsFullAccessDescription": "A koncertek naptárba mentéséhez.",
@@ -33,9 +33,9 @@
     },
     "android": {
       "package": "hu.sportalso.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
-        "backgroundColor": "#1a7f37",
+        "backgroundColor": "#653071",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -61,6 +61,12 @@
         "expo-document-picker",
         {
           "writePermission": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": []
         }
       ]
     ]
