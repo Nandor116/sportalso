@@ -30,6 +30,10 @@
   .past-section { border:1px solid var(--line); border-radius:8px; margin-top:12px; }
   .past-section summary { padding:10px 12px; font-weight:600; font-size:14px; color:#57606a; cursor:pointer; }
   .past-section .event { margin:0 10px 10px; }
+  .theme-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .theme-btn { border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center; min-width:70px; cursor:pointer; background:#fff; font-size:12px; font-weight:600; }
+  .theme-btn.active { border-color:var(--accent); background:rgba(101,48,113,.1); color:var(--accent); }
+  .theme-btn span { display:block; font-size:20px; margin-bottom:4px; }
   .status { position:fixed; left:0; right:0; bottom:0; background:#1f2328; color:#fff;
     padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; z-index:999; }
   .ok { color:#7ee787; } .err { color:#ffa198; }
@@ -99,10 +103,10 @@
         <div class="tile-title">Események</div>
         <div class="tile-desc" id="tileEventsDesc">Koncertek kezelése</div>
       </div>
-      <div class="tile disabled">
+      <div class="tile" id="tileSettings">
         <div class="tile-icon">⚙️</div>
         <div class="tile-title">Beállítások</div>
-        <div class="tile-desc">Hamarosan</div>
+        <div class="tile-desc">Megjelenés, adatok</div>
       </div>
       <div class="tile disabled">
         <div class="tile-icon">📊</div>
@@ -135,6 +139,27 @@
     <p class="muted" id="serverInfo"></p>
   </div>
 
+  <!-- SETTINGS -->
+  <div id="settingsView" style="display:none">
+    <div class="sub-header">
+      <button class="back" id="settingsBackBtn">←</button>
+      <h2>Beállítások</h2>
+    </div>
+    <section>
+      <label>Megjelenés</label>
+      <div class="theme-row" id="themeRow"></div>
+    </section>
+    <section>
+      <label>Admin fiók</label>
+      <p class="muted">A bejelentkezési adatok a böngészőben tárolódnak.</p>
+      <button class="danger small" id="clearCredsBtn">Kijelentkezés és adatok törlése</button>
+    </section>
+    <section>
+      <label>Névjegy</label>
+      <p class="muted">Sportalsó admin v0.0.4</p>
+    </section>
+  </div>
+
 </main>
 <div class="status"><span id="statusText">Kész.</span></div>
 
@@ -163,10 +188,12 @@ function showView(view) {
   $("loginScreen").style.display = "none";
   $("dashboard").style.display = "none";
   $("editorView").style.display = "none";
+  $("settingsView").style.display = "none";
   $("logoutBtn").style.display = "none";
   if (view === "login") $("loginScreen").style.display = "";
   if (view === "dashboard") { $("dashboard").style.display = ""; $("logoutBtn").style.display = ""; }
   if (view === "editor") { $("editorView").style.display = ""; $("logoutBtn").style.display = ""; }
+  if (view === "settings") { $("settingsView").style.display = ""; $("logoutBtn").style.display = ""; }
   currentView = view;
   if (view !== "login") location.hash = view;
   else location.hash = "";
@@ -296,6 +323,65 @@ $("tileEvents").onclick = () => {
 $("backBtn").onclick = () => {
   history.back();
 };
+
+// ---------- dashboard -> settings ----------
+$("tileSettings").onclick = () => {
+  showView("settings", true);
+  renderThemeButtons();
+};
+$("settingsBackBtn").onclick = () => {
+  history.back();
+};
+$("clearCredsBtn").onclick = () => {
+  doLogout();
+};
+
+function applyTheme(mode) {
+  if (mode === "dark") {
+    document.documentElement.style.setProperty("--bg", "#1c1c1e");
+    document.documentElement.style.setProperty("--line", "#38383a");
+    document.body.style.background = "#1c1c1e";
+    document.body.style.color = "#f2f2f7";
+    document.querySelectorAll(".event, section").forEach(el => { el.style.background = "#2c2c2e"; });
+    document.querySelectorAll("input, textarea").forEach(el => { el.style.background = "#1c1c1e"; el.style.color = "#f2f2f7"; el.style.borderColor = "#38383a"; });
+  } else if (mode === "oled") {
+    document.documentElement.style.setProperty("--bg", "#0a0a0a");
+    document.documentElement.style.setProperty("--line", "#1c1c1e");
+    document.body.style.background = "#000";
+    document.body.style.color = "#f2f2f7";
+    document.querySelectorAll(".event, section").forEach(el => { el.style.background = "#0a0a0a"; });
+    document.querySelectorAll("input, textarea").forEach(el => { el.style.background = "#0a0a0a"; el.style.color = "#f2f2f7"; el.style.borderColor = "#1c1c1e"; });
+  } else {
+    document.documentElement.style.setProperty("--bg", "#f6f8fa");
+    document.documentElement.style.setProperty("--line", "#d0d7de");
+    document.body.style.background = "#fff";
+    document.body.style.color = "#1f2328";
+    document.querySelectorAll(".event, section").forEach(el => { el.style.background = "#fff"; });
+    document.querySelectorAll("input, textarea").forEach(el => { el.style.background = "#fff"; el.style.color = "#1f2328"; el.style.borderColor = "#d0d7de"; });
+  }
+  localStorage.setItem("sportalso_admin_theme", mode);
+}
+
+function renderThemeButtons() {
+  const modes = [
+    { value: "light", icon: "⚪", label: "Világos" },
+    { value: "dark", icon: "🔘", label: "Sötét" },
+    { value: "oled", icon: "⚫", label: "OLED" },
+  ];
+  const current = localStorage.getItem("sportalso_admin_theme") || "light";
+  const row = $("themeRow");
+  row.innerHTML = "";
+  modes.forEach(m => {
+    const btn = document.createElement("div");
+    btn.className = "theme-btn" + (m.value === current ? " active" : "");
+    btn.innerHTML = `<span>${m.icon}</span>${m.label}`;
+    btn.onclick = () => {
+      applyTheme(m.value);
+      renderThemeButtons();
+    };
+    row.appendChild(btn);
+  });
+}
 
 // browser back/forward
 window.addEventListener("popstate", e => {
@@ -602,6 +688,7 @@ $("download").onclick = async () => {
 
 // ---------- boot ----------
 (function boot() {
+  applyTheme(localStorage.getItem("sportalso_admin_theme") || "light");
   const creds = loadCreds();
   if (creds.repo && creds.token && creds.keyhex && validateKey()) {
     currentRepo = creds.repo;
