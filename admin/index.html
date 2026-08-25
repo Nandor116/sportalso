@@ -113,6 +113,8 @@ function showLoginErr(msg) {
 function saveCreds(remember) {
   const data = {
     repo: $("repo").value.trim(),
+    branch: currentBranch,
+    path: currentPath,
     token: $("token").value.trim(),
     keyhex: $("keyhex").value.trim(),
     remember
@@ -475,6 +477,9 @@ $("download").onclick = async () => {
 (function boot() {
   const creds = loadCreds();
   if (creds.repo && creds.token && creds.keyhex && validateKey()) {
+    currentRepo = creds.repo;
+    currentBranch = creds.branch || "main";
+    currentPath = creds.path || "events.json";
     showAdmin();
   } else {
     $("loginScreen").style.display = "";
