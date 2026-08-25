@@ -155,7 +155,7 @@ function showLoginErr(msg) {
 
 // ---------- navigation ----------
 let currentView = "login";
-function showView(view, push) {
+function showView(view) {
   $("loginScreen").style.display = "none";
   $("dashboard").style.display = "none";
   $("editorView").style.display = "none";
@@ -163,11 +163,18 @@ function showView(view, push) {
   if (view === "login") $("loginScreen").style.display = "";
   if (view === "dashboard") { $("dashboard").style.display = ""; $("logoutBtn").style.display = ""; }
   if (view === "editor") { $("editorView").style.display = ""; $("logoutBtn").style.display = ""; }
-  if (view !== currentView) {
-    currentView = view;
-    if (push !== false) history.pushState({ view }, "", "");
-  }
+  currentView = view;
+  if (view !== "login") location.hash = view;
+  else location.hash = "";
 }
+function navigateTo(view) {
+  showView(view);
+}
+window.addEventListener("hashchange", () => {
+  const h = location.hash.slice(1);
+  if (h && h !== currentView) showView(h);
+  else if (!h && currentView !== "login") showView("login");
+});
 
 // ---------- persistence ----------
 function saveCreds(remember) {
@@ -245,7 +252,7 @@ $("keyhex").addEventListener("keydown", e => { if (e.key === "Enter") doLogin();
 $("token").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
 
 function enterDashboard() {
-  showView("dashboard");
+  showView("dashboard", true);
   setStatus("Belépve.", "ok");
   void loadDashboardData();
 }
@@ -271,19 +278,19 @@ function doLogout() {
   $("keyhex").value = ""; $("token").value = "";
   $("serverInfo").textContent = "";
   showLoginErr("");
-  showView("login");
+  history.replaceState({ view: "login" }, "", "");
+  showView("login", false);
   setStatus("Kijelentkezve.", "");
 }
 $("logoutBtn").onclick = doLogout;
 
 // ---------- dashboard -> editor ----------
 $("tileEvents").onclick = () => {
-  showView("editor");
+  showView("editor", true);
   void fetchFromServer();
 };
 $("backBtn").onclick = () => {
-  showView("dashboard");
-  void loadDashboardData();
+  history.back();
 };
 
 // browser back/forward
@@ -299,7 +306,7 @@ window.addEventListener("popstate", e => {
   $("editorView").addEventListener("touchend", e => {
     if (x0 === null) return;
     const dx = e.changedTouches[0].clientX - x0;
-    if (dx > 80) { showView("dashboard"); void loadDashboardData(); }
+    if (dx > 80) { history.back(); }
     x0 = null;
   });
 })();
@@ -385,8 +392,34 @@ function newEvent() {
 function render() {
   const box = $("events");
   box.innerHTML = "";
-  if (!events.length) box.innerHTML = '<p class="muted">Még nincs esemény. Kattints a "+ Új esemény" gombra.</p>';
-  events.forEach((ev, i) => {
+  if (!events.length) {
+    box.innerHTML = '<p class="muted">Még nincs esemény. Kattints a "+ Új esemény" gombra.</p>';
+    return;
+  }
+  const now = new Date().toISOString();
+  const upcoming = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") >= now.slice(0, 16));
+  const past = events.map((ev, i) => ({ ev, i })).filter(e => (e.ev.startsAtLocal || "") < now.slice(0, 16));
+
+  if (upcoming.length) {
+    const h = document.createElement("h3");
+    h.textContent = `Következő (${upcoming.length})`;
+    h.className = "section-heading";
+    box.appendChild(h);
+    upcoming.forEach(({ ev, i }) => renderEvent(ev, i, box));
+  }
+
+  if (past.length) {
+    const det = document.createElement("details");
+    det.className = "past-section";
+    const sum = document.createElement("summary");
+    sum.textContent = `Lezajlott (${past.length})`;
+    det.appendChild(sum);
+    past.forEach(({ ev, i }) => renderEvent(ev, i, det));
+    box.appendChild(det);
+  }
+}
+
+function renderEvent(ev, i, container) {
     const div = document.createElement("div");
     div.className = "event";
     div.innerHTML = `
@@ -455,8 +488,7 @@ function render() {
         thumb.style.display = "block";
       } catch (err) { compressInfo.textContent = "Hiba: " + err.message; }
     });
-    box.appendChild(div);
-  });
+    container.appendChild(div);
 }
 $("addEvent").onclick = () => { events.push(newEvent()); render(); };
 
@@ -572,10 +604,19 @@ $("download").onclick = async () => {
     currentBranch = creds.branch || "main";
     currentPath = creds.path || "events.json";
     history.replaceState({ view: "dashboard" }, "", "");
-    enterDashboard();
+    currentView = "dashboard";
+    $("loginScreen").style.display = "none";
+    $("dashboard").style.display = "";
+    $("logoutBtn").style.display = "";
+    setStatus("Belépve.", "ok");
+    void loadDashboardData();
   } else {
     history.replaceState({ view: "login" }, "", "");
-    showView("login", false);
+    currentView = "login";
+    $("loginScreen").style.display = "";
+    $("dashboard").style.display = "none";
+    $("editorView").style.display = "none";
+    $("logoutBtn").style.display = "none";
   }
   setStatus("Kész.");
 })();

@@ -77,6 +77,7 @@ function AppContent() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<SportEvent | null>(null);
   const [autoAdd, setAutoAdd] = useState(false);
+  const [pastExpanded, setPastExpanded] = useState(false);
 
   async function syncAdded(events: SportEvent[]) {
     const found = await syncAddedFromCalendar(events);
@@ -152,6 +153,10 @@ function AppContent() {
   const upcoming = (list?.events ?? [])
     .filter((e) => new Date(e.startsAt) >= startOfToday())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+  const past = (list?.events ?? [])
+    .filter((e) => new Date(e.startsAt) < startOfToday())
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
 
   const sections = groupByMonth(upcoming);
   const missingCount = upcoming.filter((e) => !added.has(e.id)).length;
@@ -315,7 +320,7 @@ function AppContent() {
           }
           ListEmptyComponent={
             <View style={s.center}>
-              <Text style={[s.emptyTitle, { color: colors.text }]}>Nincs közelgő koncert</Text>
+              <Text style={[s.emptyTitle, { color: colors.text }]}>Nincs következő esemény</Text>
               <Text style={[s.muted, { color: colors.muted }]}>Húzd le a listát a frissítéshez.</Text>
             </View>
           }
@@ -332,6 +337,25 @@ function AppContent() {
                   </Text>
                 </Pressable>
               )}
+
+              {past.length > 0 && (
+                <View style={{ marginTop: 16 }}>
+                  <Pressable onPress={() => setPastExpanded(!pastExpanded)}>
+                    <Text style={[s.pastToggle, { color: colors.accent }]}>
+                      {pastExpanded ? "▾" : "▸"} Lezajlott ({past.length})
+                    </Text>
+                  </Pressable>
+                  {pastExpanded && past.map((ev) => (
+                    <Pressable key={ev.id} onPress={() => setSelectedEvent(ev)}>
+                      <View style={[s.pastRow, { borderColor: colors.border }]}>
+                        <Text style={[s.title, { color: colors.muted }]}>{ev.title}</Text>
+                        <Text style={[s.date, { color: colors.muted }]}>{fmtDate(ev.startsAt)}</Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
               {!!error && <Text style={s.error}>{error}</Text>}
               <Text style={[s.muted, { color: colors.muted }]}>
                 {synced
@@ -460,6 +484,8 @@ const s = StyleSheet.create({
   btnText: { fontSize: 15, fontWeight: "600" },
   btnTextPrimary: { color: "#fff", fontSize: 15, fontWeight: "600" },
   footer: { alignItems: "center", paddingVertical: 14, gap: 4 },
+  pastToggle: { fontSize: 15, fontWeight: "700", textAlign: "center", paddingVertical: 8 },
+  pastRow: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 6 },
   muted: { fontSize: 12 },
   error: { color: "#cf222e", fontSize: 13, textAlign: "center" },
   emptyTitle: { fontSize: 17, fontWeight: "600", marginBottom: 6 },
