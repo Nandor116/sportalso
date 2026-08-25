@@ -605,6 +605,7 @@ async function fetchFromServer() {
   serverVersion = data.version || 0;
   events = (data.events || []).map(e => ({
     ...e,
+    title: e.title || "",
     ticketUrl: e.ticketUrl || "", note: e.note || "", description: e.description || "",
     imageUrl: e.imageUrl || "",
     startsAtLocal: new Date(e.startsAt).toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16)
