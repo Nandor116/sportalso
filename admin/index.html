@@ -195,19 +195,12 @@ function showView(view) {
   if (view === "editor") { $("editorView").style.display = ""; $("logoutBtn").style.display = ""; }
   if (view === "settings") { $("settingsView").style.display = ""; $("logoutBtn").style.display = ""; }
   currentView = view;
-  if (view !== "login") location.hash = view;
-  else location.hash = "";
 }
 function navigateTo(view) {
   showView(view);
   if (view === "editor") void fetchFromServer();
   if (view === "settings") renderThemeButtons();
 }
-window.addEventListener("hashchange", () => {
-  const h = location.hash.slice(1);
-  if (h && h !== currentView) showView(h);
-  else if (!h && currentView !== "login") showView("login");
-});
 
 // ---------- persistence ----------
 function saveCreds(remember) {
@@ -311,21 +304,16 @@ function doLogout() {
   $("keyhex").value = ""; $("token").value = "";
   $("serverInfo").textContent = "";
   showLoginErr("");
-  history.replaceState({ view: "login" }, "", "");
-  showView("login", false);
+  showView("login");
   setStatus("Kijelentkezve.", "");
 }
 $("logoutBtn").onclick = doLogout;
 
 // ---------- dashboard -> editor ----------
-$("backBtn").onclick = () => {
-  history.back();
-};
+$("backBtn").onclick = () => { showView("dashboard"); };
 
 // ---------- dashboard -> settings ----------
-$("settingsBackBtn").onclick = () => {
-  history.back();
-};
+$("settingsBackBtn").onclick = () => { showView("dashboard"); };
 $("clearCredsBtn").onclick = () => {
   doLogout();
 };
@@ -377,12 +365,6 @@ function renderThemeButtons() {
   });
 }
 
-// browser back/forward
-window.addEventListener("popstate", e => {
-  const view = e.state?.view || "dashboard";
-  showView(view, false);
-});
-
 // swipe right to go back
 (function() {
   let x0 = null;
@@ -390,7 +372,7 @@ window.addEventListener("popstate", e => {
   $("editorView").addEventListener("touchend", e => {
     if (x0 === null) return;
     const dx = e.changedTouches[0].clientX - x0;
-    if (dx > 80) { history.back(); }
+    if (dx > 80) { showView("dashboard"); }
     x0 = null;
   });
 })();
@@ -688,7 +670,6 @@ $("download").onclick = async () => {
     currentRepo = creds.repo;
     currentBranch = creds.branch || "main";
     currentPath = creds.path || "events.json";
-    history.replaceState({ view: "dashboard" }, "", "");
     currentView = "dashboard";
     $("loginScreen").style.display = "none";
     $("dashboard").style.display = "";
@@ -696,7 +677,6 @@ $("download").onclick = async () => {
     setStatus("Belépve.", "ok");
     void loadDashboardData();
   } else {
-    history.replaceState({ view: "login" }, "", "");
     currentView = "login";
     $("loginScreen").style.display = "";
     $("dashboard").style.display = "none";
