@@ -517,9 +517,13 @@ function renderEvent(ev, i, container) {
         <button class="danger small" data-del="${i}">Törlés</button>
       </div>`;
     div.querySelector("[data-f=title]").value = ev.title;
-    const parts = (ev.startsAtLocal || "").split("T");
+    const raw = ev.startsAtLocal || "";
+    const parts = raw.includes("T") ? raw.split("T") : raw.split(" ");
     div.querySelector("[data-f=startDate]").value = parts[0] || "";
     div.querySelector("[data-f=startTime]").value = parts[1] || "";
+    div.querySelector("[data-f=ticketUrl]").value = ev.ticketUrl || "";
+    div.querySelector("[data-f=note]").value = ev.note || "";
+    div.querySelector("[data-f=description]").value = ev.description || "";
 
     div.querySelectorAll("[data-f]").forEach(inp => {
       const field = inp.dataset.f;
