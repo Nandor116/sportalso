@@ -9,69 +9,69 @@
   :root { --accent:#653071; --accent-light:#b47ed4; --bg:#f6f8fa; --line:#d0d7de; }
   * { box-sizing:border-box; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; margin:0; background:#fff; color:#1f2328; }
-  header { background:var(--accent); color:#fff; padding:14px 16px; font-weight:700; font-size:18px; }
+  header { background:var(--accent); color:#fff; padding:14px 16px; font-weight:700; font-size:18px; display:flex; justify-content:space-between; align-items:center; }
+  header button { background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:6px; padding:5px 12px; font-size:13px; cursor:pointer; font-weight:600; }
   main { max-width:720px; margin:0 auto; padding:16px; padding-bottom:90px; }
-  section { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; background:var(--bg); }
+  section { border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; background:var(--bg); }
   h2 { margin:0 0 10px; font-size:15px; }
-  label { display:block; font-size:12px; color:#57606a; margin:8px 0 3px; }
+  label { display:block; font-size:12px; color:#57606a; margin:10px 0 3px; }
+  label:first-child { margin-top:0; }
   input[type=text], input[type=password], input[type=datetime-local], input[type=url], textarea {
     width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px; background:#fff;
   }
   textarea { resize:vertical; min-height:60px; font-family:inherit; }
   .row { display:flex; gap:8px; } .row > * { flex:1; }
-  button {
-    padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:#fff;
-    font-size:15px; cursor:pointer; font-weight:600;
-  }
+  button { padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:#fff; font-size:15px; cursor:pointer; font-weight:600; }
   button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
   button.danger { color:#cf222e; border-color:#cf222e; background:#fff; }
   button.small { padding:5px 10px; font-size:13px; }
-  .event { border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:10px; background:#fff; }
+  .event { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px; background:#fff; }
   .status { position:fixed; left:0; right:0; bottom:0; background:#1f2328; color:#fff;
     padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; z-index:999; }
   .ok { color:#7ee787; } .err { color:#ffa198; }
   .muted { color:#57606a; font-size:12px; }
-  details summary { cursor:pointer; font-size:14px; font-weight:600; }
   .img-preview { width:100%; max-height:200px; object-fit:cover; border-radius:6px; border:1px solid var(--line); margin-top:6px; display:none; }
   .img-row { display:flex; gap:8px; align-items:flex-end; }
   .img-row .img-col { flex:1; }
   .img-row .img-thumb { width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--line); flex-shrink:0; display:none; }
   .compress-info { font-size:11px; color:#57606a; margin-top:2px; }
+
+  /* login screen */
+  .login-wrap { max-width:380px; margin:60px auto 0; }
+  .login-wrap section { padding:24px; }
+  .login-wrap h2 { font-size:20px; text-align:center; margin-bottom:16px; }
+  .login-err { background:#ffebe9; border:1px solid #ff818266; color:#cf222e; border-radius:8px; padding:10px 14px; font-size:14px; margin-bottom:12px; display:none; }
+  .login-wrap button.primary { width:100%; padding:12px; font-size:16px; margin-top:12px; }
+  .login-or { text-align:center; color:#57606a; font-size:13px; margin:10px 0; }
 </style>
 </head>
 <body>
-<header>Sportalsó — koncert admin</header>
+<header>
+  <span>Sportalsó — koncert admin</span>
+  <button id="logoutBtn" style="display:none">Kijelentkezés</button>
+</header>
 <main>
 
-  <details id="setupBox">
-    <summary>⚙️ Beállítások (egyszer kell)</summary>
-    <section style="margin-top:10px">
-      <label>GitHub repo (pl. valaki/sportalso)</label>
-      <input type="text" id="repo" placeholder="felhasznalo/sportalso">
-      <div class="row">
-        <div><label>Branch</label><input type="text" id="branch" value="main"></div>
-        <div><label>Fájl útvonal</label><input type="text" id="path" value="events.json"></div>
-      </div>
-      <label>Fine-grained token (Contents: Read and Write)</label>
-      <input type="password" id="token" placeholder="github_pat_...">
-      <label>Titkos kulcs (HEX) — fájl vagy beillesztés</label>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-wrap">
+    <section>
+      <h2>Bejelentkezés</h2>
+      <div class="login-err" id="loginErr"></div>
+      <label>GitHub repo</label>
+      <input type="text" id="repo" placeholder="Nandor116/sportalso" autocomplete="off">
+      <label>GitHub token (Contents: Read+Write)</label>
+      <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
+      <label>Titkos kulcs (HEX)</label>
       <input type="file" id="keyfile" accept=".key,.txt" style="margin-top:4px">
-      <textarea id="keyhex" rows="2" placeholder="64 bájt hex..." style="width:100%;font-family:monospace;margin-top:4px;border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
-      <label style="display:flex;gap:6px;align-items:center;margin-top:6px">
-        <input type="checkbox" id="remember"> megjegyzés ezen a készüléken (csak saját telefonon!)
+      <textarea id="keyhex" rows="2" placeholder="128 hex karakter..." style="width:100%;font-family:monospace;margin-top:4px;border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
+      <label style="display:flex;gap:6px;align-items:center;margin-top:10px">
+        <input type="checkbox" id="remember"> Megjegyzés ezen a készüléken
       </label>
-      <button class="small" id="saveSetup" style="margin-top:8px">Beállítások mentése</button>
-      <p class="muted">A kulcs és a token alapból csak a munkamenetben él (nem tárolódik). A „megjegyzés" pipával localStorage-ba kerül — ezt csak olyan eszközön pipáld be, ami nálad biztonságban van.</p>
+      <button class="primary" id="loginBtn">Belépés</button>
     </section>
-  </details>
+  </div>
 
-  <section id="lockedBox">
-    <h2>🔒 Zárolt szerkesztő</h2>
-    <p class="muted">Az eseménylistát csak titkos kulccsal lehet aláírni — a kulcs birtoklása a &bdquo;belépés&rdquo;.
-    Nyisd a Beállításokat és töltsd be a kulcsot (fájlból vagy beillesztve); az oldal ellenőrzi,
-    hogy ez-e a jó kulcs, és csak akkor enged szerkeszteni.</p>
-  </section>
-
+  <!-- ADMIN UI -->
   <div id="adminUi" style="display:none">
     <section>
       <h2>Koncertek</h2>
@@ -81,8 +81,8 @@
 
     <div class="row">
       <button class="primary" id="publish">Publikálás</button>
-      <button id="download">Letöltés kézi feltöltéshez</button>
-      <button id="reload">Úratöltés a szerverről</button>
+      <button id="download">Letöltés</button>
+      <button id="reload">Frissítés</button>
     </div>
     <p class="muted" id="serverInfo"></p>
   </div>
@@ -94,237 +94,125 @@
 const $ = id => document.getElementById(id);
 let events = [];
 let serverVersion = 0;
+let currentRepo = "";
+let currentBranch = "main";
+let currentPath = "events.json";
 
 function setStatus(msg, cls) {
   $("statusText").textContent = msg;
   $("statusText").className = cls || "";
 }
 
-// ---------- setup persistence ----------
-function loadSetup() {
-  const s = JSON.parse(localStorage.getItem("sportalso_admin") || "{}");
-  if (s.repo) $("repo").value = s.repo;
-  if (s.branch) $("branch").value = s.branch;
-  if (s.path) $("path").value = s.path;
-  if (s.token && s.remember) $("token").value = s.token;
-  if (s.keyhex && s.remember) $("keyhex").value = s.keyhex;
-  if (s.remember) $("remember").checked = true;
+function showLoginErr(msg) {
+  const el = $("loginErr");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
 }
-$("saveSetup").onclick = () => {
-  const remember = $("remember").checked;
-  localStorage.setItem("sportalso_admin", JSON.stringify({
-    repo: $("repo").value.trim(),
-    branch: $("branch").value.trim() || "main",
-    path: $("path").value.trim() || "events.json",
-    token: remember ? $("token").value.trim() : "",
-    keyhex: remember ? $("keyhex").value.trim() : "",
-    remember
-  }));
-  setStatus("Beállítások mentve.", "ok");
-};
-loadSetup();
 
-// ---------- kulcs-alapú feloldás ----------
-function setAdminUi(open) {
-  $("adminUi").style.display = open ? "" : "none";
-  $("lockedBox").style.display = open ? "none" : "";
-}
-let unlocked = false;
-function tryUnlock() {
-  const keyhex = $("keyhex").value.trim();
-  let ok = false;
-  if (/^[0-9a-fA-F]{128}$/.test(keyhex)) {
-    const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
-    const pubHex = Array.from(nacl.sign.keyPair.fromSecretKey(secret).publicKey)
-      .map(b => b.toString(16).padStart(2, "0")).join("");
-    ok = pubHex === (window.SPORTALSO_PUBLIC_KEY || "").toLowerCase();
-  }
-  setAdminUi(ok);
-  if (ok && !unlocked) setStatus("✓ Kulcs elfogadva — admin mód aktív.", "ok");
-  if (!ok && unlocked) setStatus("Kulcs eltávolítva — zárolva.", "");
-  unlocked = ok;
-}
-$("keyhex").addEventListener("input", tryUnlock);
-
-function cfg() {
-  return {
+// ---------- persistence ----------
+function saveCreds(remember) {
+  const data = {
     repo: $("repo").value.trim(),
-    branch: $("branch").value.trim() || "main",
-    path: $("path").value.trim() || "events.json",
     token: $("token").value.trim(),
-    keyhex: $("keyhex").value.trim()
+    keyhex: $("keyhex").value.trim(),
+    remember
   };
+  if (remember) {
+    localStorage.setItem("sportalso_creds", JSON.stringify(data));
+  } else {
+    localStorage.removeItem("sportalso_creds");
+  }
 }
 
+function loadCreds() {
+  try {
+    const s = JSON.parse(localStorage.getItem("sportalso_creds") || "{}");
+    if (s.repo) $("repo").value = s.repo;
+    if (s.token) $("token").value = s.token;
+    if (s.keyhex) $("keyhex").value = s.keyhex;
+    if (s.remember) $("remember").checked = true;
+    return s;
+  } catch { return {}; }
+}
+
+// ---------- key validation ----------
+function validateKey() {
+  const keyhex = $("keyhex").value.trim();
+  if (!/^[0-9a-fA-F]{128}$/.test(keyhex)) return false;
+  const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
+  const pubHex = Array.from(nacl.sign.keyPair.fromSecretKey(secret).publicKey)
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  return pubHex === (window.SPORTALSO_PUBLIC_KEY || "").toLowerCase();
+}
+
+// ---------- login ----------
 $("keyfile").addEventListener("change", e => {
   const f = e.target.files[0];
   if (!f) return;
-  f.text().then(t => { $("keyhex").value = t.trim(); tryUnlock(); });
+  f.text().then(t => { $("keyhex").value = t.trim(); });
 });
 
-// ---------- image compression via Canvas API ----------
-function compressImage(file, maxW, maxH, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("Nem sikerült betölteni a képet."));
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > maxW) { h = h * maxW / w; w = maxW; }
-        if (h > maxH) { w = w * maxH / h; h = maxH; }
-        w = Math.round(w); h = Math.round(h);
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        let q = quality;
-        let blob;
-        function tryCompress() {
-          canvas.toBlob(b => {
-            blob = b;
-            if (blob.size > 500000 && q > 0.3) {
-              q -= 0.1;
-              tryCompress();
-            } else {
-              resolve({ blob, width: w, height: h });
-            }
-          }, "image/jpeg", q);
-        }
-        tryCompress();
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
+async function doLogin() {
+  showLoginErr("");
+  const repo = $("repo").value.trim();
+  const token = $("token").value.trim();
+  const keyhex = $("keyhex").value.trim();
 
-function blobToBase64(blob) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const b64 = reader.result.split(",")[1];
-      resolve(b64);
-    };
-    reader.readAsDataURL(blob);
-  });
-}
+  if (!repo) { showLoginErr("Add meg a repo nevét!"); return; }
+  if (!token) { showLoginErr("Add meg a GitHub token-t!"); return; }
+  if (!validateKey()) { showLoginErr("A kulcs nem érvényes (nem egyezik a nyilvános kulccsal)."); return; }
 
-// ---------- event editor ----------
-function newEvent() {
-  const d = new Date(Date.now() + 7 * 86400000);
-  d.setHours(20, 0, 0, 0);
-  const pad = n => String(n).padStart(2, "0");
-  return {
-    id: Array.from(nacl.randomBytes(4)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 6),
-    title: "",
-    startsAtLocal: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`,
-    ticketUrl: "",
-    note: "",
-    description: "",
-    imageUrl: "",
-    _imageBlob: null,
-    _imageFileName: ""
-  };
-}
-
-function render() {
-  const box = $("events");
-  box.innerHTML = "";
-  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints az „+ Új koncert" gombra.</p>';
-  events.forEach((ev, i) => {
-    const div = document.createElement("div");
-    div.className = "event";
-    div.innerHTML = `
-      <div class="row">
-        <div><label>Cím</label><input type="text" data-f="title" value=""></div>
-        <div style="max-width:220px"><label>Dátum-idő</label><input type="datetime-local" data-f="startsAtLocal" value=""></div>
-      </div>
-      <div class="row">
-        <div><label>Jegylink (opcionális)</label><input type="url" data-f="ticketUrl" placeholder="https://..."></div>
-        <div><label>Megjegyzés (opcionális)</label><input type="text" data-f="note"></div>
-      </div>
-      <label>Leírás (opcionális)</label>
-      <textarea data-f="description" placeholder="Rövid leírás a koncertről..."></textarea>
-      <div class="img-row">
-        <div class="img-col">
-          <label>Borítókép (opcionális)</label>
-          <input type="file" accept="image/*" data-img="${i}">
-          <div class="compress-info" data-compressinfo="${i}"></div>
-        </div>
-        <img class="img-thumb" data-imgthumb="${i}">
-      </div>
-      ${ev.imageUrl ? `<img class="img-preview" data-imgpreview="${i}" src="${ev.imageUrl}">` : ''}
-      <div style="text-align:right;margin-top:6px">
-        <span class="muted">id: ${ev.id}</span>
-        <button class="danger small" data-del="${i}">Törlés</button>
-      </div>`;
-    div.querySelector('[data-f=title]').value = ev.title;
-    div.querySelectorAll("[data-f]").forEach(inp => {
-      inp.value = ev[inp.dataset.f] ?? "";
-      inp.addEventListener("input", () => { ev[inp.dataset.f] = inp.value; });
+  setStatus("Bejelentkezés...");
+  try {
+    const r = await fetch(`https://api.github.com/repos/${repo}/contents/events.json`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
-    div.querySelector("[data-del]").onclick = () => { events.splice(i, 1); render(); };
+    if (r.status === 401) { showLoginErr("Hibás token vagy nincs jogosultság (401)."); setStatus("Sikertelen belépés.", "err"); return; }
+    if (r.status === 404) {
+      currentRepo = repo; currentBranch = "main"; currentPath = "events.json";
+    } else if (r.ok) {
+      const meta = await r.json();
+      currentRepo = repo; currentBranch = "main"; currentPath = "events.json";
+    } else {
+      showLoginErr(`GitHub hiba: ${r.status}`); setStatus("Sikertelen belépés.", "err"); return;
+    }
+  } catch (e) {
+    showLoginErr("Hálózati hiba: " + e.message); setStatus("Sikertelen belépés.", "err"); return;
+  }
 
-    // image file handler
-    const imgInput = div.querySelector(`[data-img="${i}"]`);
-    const thumb = div.querySelector(`[data-imgthumb="${i}"]`);
-    const compressInfo = div.querySelector(`[data-compressinfo="${i}"]`);
-    const preview = div.querySelector(`[data-imgpreview="${i}"]`);
-    if (ev.imageUrl && preview) preview.style.display = "block";
-
-    imgInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        compressInfo.textContent = "Tömörítés...";
-        const { blob, width, height } = await compressImage(file, 1200, 900, 0.85);
-        const b64 = await blobToBase64(blob);
-        const ext = file.name.split(".").pop() || "jpg";
-        const fileName = `${ev.id}.${ext}`;
-        ev._imageBlob = blob;
-        ev._imageBase64 = b64;
-        ev._imageFileName = fileName;
-        const kb = Math.round(blob.size / 1024);
-        compressInfo.textContent = `Kész: ${width}×${height}px, ${kb} KB`;
-        thumb.src = URL.createObjectURL(blob);
-        thumb.style.display = "block";
-      } catch (err) {
-        compressInfo.textContent = "Hiba: " + err.message;
-      }
-    });
-
-    box.appendChild(div);
-  });
-}
-$("addEvent").onclick = () => { events.push(newEvent()); render(); };
-
-// ---------- serialization & signing ----------
-function buildPayload() {
-  const clean = events
-    .filter(e => e.title.trim())
-    .sort((a, b) => new Date(a.startsAtLocal) - new Date(b.startsAtLocal))
-    .map(e => ({
-      id: e.id,
-      title: e.title.trim(),
-      startsAt: new Date(e.startsAtLocal).toISOString(),
-      ...(e.imageUrl ? { imageUrl: e.imageUrl } : {}),
-      ...(e.description.trim() ? { description: e.description.trim() } : {}),
-      ...(e.ticketUrl.trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
-      ...(e.note.trim() ? { note: e.note.trim() } : {})
-    }));
-  return JSON.stringify({ version: serverVersion + 1, generatedAt: new Date().toISOString(), events: clean }, null, 2) + "\n";
+  saveCreds($("remember").checked);
+  showAdmin();
 }
 
-async function sign(jsonText) {
-  const { keyhex } = cfg();
-  if (!/^[0-9a-fA-F]{128}$/.test(keyhex)) throw new Error("A titkos kulcs nem tűnik érvényesnek (128 hex karakter kell).");
-  const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
-  const sig = nacl.sign.detached(new TextEncoder().encode(jsonText), secret);
-  return btoa(String.fromCharCode(...sig));
+$("loginBtn").onclick = doLogin;
+$("keyhex").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+function showAdmin() {
+  $("loginScreen").style.display = "none";
+  $("adminUi").style.display = "";
+  $("logoutBtn").style.display = "";
+  setStatus("Belépve.", "ok");
+  void fetchFromServer();
 }
+
+function doLogout() {
+  localStorage.removeItem("sportalso_creds");
+  $("loginScreen").style.display = "";
+  $("adminUi").style.display = "none";
+  $("logoutBtn").style.display = "none";
+  events = []; serverVersion = 0;
+  $("keyhex").value = ""; $("token").value = "";
+  $("serverInfo").textContent = "";
+  showLoginErr("");
+  setStatus("Kijelentkezve.", "");
+}
+$("logoutBtn").onclick = doLogout;
 
 // ---------- github api ----------
+function cfg() {
+  return { repo: currentRepo, branch: currentBranch, path: currentPath, token: $("token").value.trim(), keyhex: $("keyhex").value.trim() };
+}
+
 async function ghGet(path) {
   const { repo, branch, token } = cfg();
   const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
@@ -345,28 +233,153 @@ async function ghPut(path, content, sha, message) {
   return r.json();
 }
 
-async function uploadImage(ev) {
-  if (!ev._imageBase64) return;
-  const { repo, branch, token } = cfg();
-  if (!token) throw new Error("Képfeltöltéshez token szükséges.");
-  const imgPath = `images/${ev._imageFileName}`;
-  const existing = await ghGet(imgPath);
-  await ghPut(imgPath, ev._imageBase64, existing ? existing.sha : undefined,
-    `Kép frissítés: ${ev.title || ev.id}`);
-  const baseUrl = `https://nandor116.github.io/sportalso`;
-  ev.imageUrl = `${baseUrl}/${imgPath}`;
-  ev._imageBlob = null;
-  ev._imageBase64 = null;
+// ---------- image compression via Canvas API ----------
+function compressImage(file, maxW, maxH, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Nem sikerült betölteni a képet."));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        w = Math.round(w); h = Math.round(h);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        let q = quality;
+        function tryCompress() {
+          canvas.toBlob(b => {
+            if (b.size > 500000 && q > 0.3) { q -= 0.1; tryCompress(); }
+            else resolve({ blob: b, width: w, height: h });
+          }, "image/jpeg", q);
+        }
+        tryCompress();
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ---------- event editor ----------
+function newEvent() {
+  const d = new Date(Date.now() + 7 * 86400000);
+  d.setHours(20, 0, 0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  return {
+    id: Array.from(nacl.randomBytes(4)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 6),
+    title: "",
+    startsAtLocal: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    ticketUrl: "", note: "", description: "", imageUrl: "",
+    _imageBase64: null, _imageFileName: ""
+  };
+}
+
+function render() {
+  const box = $("events");
+  box.innerHTML = "";
+  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints a "+ Új koncert" gombra.</p>';
+  events.forEach((ev, i) => {
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerHTML = `
+      <div class="row">
+        <div><label>Cím</label><input type="text" data-f="title" value=""></div>
+        <div style="max-width:220px"><label>Dátum-idő</label><input type="datetime-local" data-f="startsAtLocal" value=""></div>
+      </div>
+      <div class="row">
+        <div><label>Jegylink</label><input type="url" data-f="ticketUrl" placeholder="https://..."></div>
+        <div><label>Megjegyzés</label><input type="text" data-f="note"></div>
+      </div>
+      <label>Leírás</label>
+      <textarea data-f="description" placeholder="Rövid leírás a koncertről..."></textarea>
+      <div class="img-row">
+        <div class="img-col">
+          <label>Borítókép</label>
+          <input type="file" accept="image/*" data-img="${i}">
+          <div class="compress-info" data-compressinfo="${i}"></div>
+        </div>
+        <img class="img-thumb" data-imgthumb="${i}">
+      </div>
+      ${ev.imageUrl ? `<img class="img-preview" data-imgpreview="${i}" src="${ev.imageUrl}">` : ""}
+      <div style="text-align:right;margin-top:6px">
+        <span class="muted">id: ${ev.id}</span>
+        <button class="danger small" data-del="${i}">Törlés</button>
+      </div>`;
+    div.querySelector("[data-f=title]").value = ev.title;
+    div.querySelectorAll("[data-f]").forEach(inp => {
+      inp.value = ev[inp.dataset.f] ?? "";
+      inp.addEventListener("input", () => { ev[inp.dataset.f] = inp.value; });
+    });
+    div.querySelector("[data-del]").onclick = () => { events.splice(i, 1); render(); };
+
+    const imgInput = div.querySelector(`[data-img="${i}"]`);
+    const thumb = div.querySelector(`[data-imgthumb="${i}"]`);
+    const compressInfo = div.querySelector(`[data-compressinfo="${i}"]`);
+    const preview = div.querySelector(`[data-imgpreview="${i}"]`);
+    if (ev.imageUrl && preview) preview.style.display = "block";
+
+    imgInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        compressInfo.textContent = "Tömörítés...";
+        const { blob, width, height } = await compressImage(file, 1200, 900, 0.85);
+        const b64 = await blobToBase64(blob);
+        const ext = file.name.split(".").pop() || "jpg";
+        ev._imageBase64 = b64;
+        ev._imageFileName = `${ev.id}.${ext}`;
+        compressInfo.textContent = `Kész: ${width}\u00d7${height}px, ${Math.round(blob.size / 1024)} KB`;
+        thumb.src = URL.createObjectURL(blob);
+        thumb.style.display = "block";
+      } catch (err) { compressInfo.textContent = "Hiba: " + err.message; }
+    });
+    box.appendChild(div);
+  });
+}
+$("addEvent").onclick = () => { events.push(newEvent()); render(); };
+
+// ---------- serialization & signing ----------
+function buildPayload() {
+  const clean = events
+    .filter(e => e.title.trim())
+    .sort((a, b) => new Date(a.startsAtLocal) - new Date(b.startsAtLocal))
+    .map(e => ({
+      id: e.id, title: e.title.trim(), startsAt: new Date(e.startsAtLocal).toISOString(),
+      ...(e.imageUrl ? { imageUrl: e.imageUrl } : {}),
+      ...(e.description.trim() ? { description: e.description.trim() } : {}),
+      ...(e.ticketUrl.trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
+      ...(e.note.trim() ? { note: e.note.trim() } : {})
+    }));
+  return JSON.stringify({ version: serverVersion + 1, generatedAt: new Date().toISOString(), events: clean }, null, 2) + "\n";
+}
+
+async function sign(jsonText) {
+  const { keyhex } = cfg();
+  if (!/^[0-9a-fA-F]{128}$/.test(keyhex)) throw new Error("Érvénytelen kulcs.");
+  const secret = new Uint8Array(keyhex.match(/.{2}/g).map(h => parseInt(h, 16)));
+  const sig = nacl.sign.detached(new TextEncoder().encode(jsonText), secret);
+  return btoa(String.fromCharCode(...sig));
 }
 
 // ---------- load from server ----------
 async function fetchFromServer() {
-  const { repo, branch, path } = cfg();
-  if (!repo) throw new Error("Előbb állítsd be a repót!");
+  const { path } = cfg();
   const meta = await ghGet(path);
   if (!meta) {
     events = []; serverVersion = 0;
-    $("serverInfo").textContent = "A szerveren még nincs events.json — az első publikálás létrehozza.";
+    $("serverInfo").textContent = "Még nincs events.json \u2014 az első publikálás létrehozza.";
     render(); return;
   }
   const jsonText = atob(meta.content.replace(/\n/g, ""));
@@ -387,40 +400,44 @@ async function fetchFromServer() {
     startsAtLocal: new Date(e.startsAt).toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16)
   }));
   $("serverInfo").textContent =
-    `Szerver: version ${serverVersion}, ${events.length} koncert` + (verified ? " • aláírás ✓" : "");
+    `Szerver: v${serverVersion}, ${events.length} koncert` + (verified ? " \u2022 aláírás \u2713" : "");
   render();
 }
 
 // ---------- actions ----------
 $("reload").onclick = async () => {
-  try { await fetchFromServer(); setStatus("Lista frissítve a szerverről.", "ok"); }
+  try { await fetchFromServer(); setStatus("Frissítve.", "ok"); }
   catch (e) { setStatus("Hiba: " + e.message, "err"); }
 };
+
+async function uploadImage(ev) {
+  if (!ev._imageBase64) return;
+  const imgPath = `images/${ev._imageFileName}`;
+  const existing = await ghGet(imgPath);
+  await ghPut(imgPath, ev._imageBase64, existing ? existing.sha : undefined,
+    `Kép: ${ev.title || ev.id}`);
+  ev.imageUrl = `https://nandor116.github.io/sportalso/${imgPath}`;
+  ev._imageBase64 = null;
+}
 
 $("publish").onclick = async () => {
   try {
     const { token } = cfg();
-    if (!token) throw new Error("Token nélkül csak a Letöltés gombbal tudsz publikálni.");
+    if (!token) throw new Error("Token hiányzik.");
     setStatus("Képek feltöltése...");
-    for (const ev of events) {
-      if (ev._imageBase64) await uploadImage(ev);
-    }
+    for (const ev of events) { if (ev._imageBase64) await uploadImage(ev); }
     const json = buildPayload();
     const sig = await sign(json);
-    setStatus("Publikálás folyamatban...");
+    setStatus("Publikálás...");
     const metaJson = await ghGet(cfg().path);
     const sigPath = cfg().path.replace(/\.json$/, ".sig");
     const metaSig = await ghGet(sigPath);
-    await ghPut(cfg().path, btoa(unescape(encodeURIComponent(json))), metaJson ? metaJson.sha : undefined,
-      `Koncert lista frissítés (v${serverVersion + 1})`);
-    await ghPut(sigPath, btoa(sig + "\n"), metaSig ? metaSig.sha : undefined,
-      `Aláírás (v${serverVersion + 1})`);
+    await ghPut(cfg().path, btoa(unescape(encodeURIComponent(json))), metaJson?.sha, `v${serverVersion + 1}`);
+    await ghPut(sigPath, btoa(sig + "\n"), metaSig?.sha, `Aláírás v${serverVersion + 1}`);
     serverVersion += 1;
-    setStatus("Kész! A frissítés már fent van a szerveren. ✓", "ok");
+    setStatus("Kész! \u2713", "ok");
     await fetchFromServer();
-  } catch (e) {
-    setStatus("Hiba: " + e.message, "err");
-  }
+  } catch (e) { setStatus("Hiba: " + e.message, "err"); }
 };
 
 $("download").onclick = async () => {
@@ -434,16 +451,24 @@ $("download").onclick = async () => {
     };
     dl("events.json", json);
     setTimeout(() => dl("events.sig", sig + "\n"), 400);
-    setStatus("Két fájl letöltve: töltsd fel őket kézzel a repóba (ugyanarra a helyre).", "ok");
+    setStatus("Két fájl letöltve.", "ok");
   } catch (e) { setStatus("Hiba: " + e.message, "err"); }
 };
 
-render();
-tryUnlock();
-setStatus("Kész.");
+// ---------- boot ----------
+(function boot() {
+  const creds = loadCreds();
+  if (creds.repo && creds.token && creds.keyhex && validateKey()) {
+    showAdmin();
+  } else {
+    $("loginScreen").style.display = "";
+    $("adminUi").style.display = "none";
+    $("logoutBtn").style.display = "none";
+  }
+  setStatus("Kész.");
+})();
 </script>
 
-<!-- Az appba épített nyilvános kulcs HEX-ben ide másolandó a szerver-oldali ellenőrzéshez: -->
 <script>window.SPORTALSO_PUBLIC_KEY = "9a1daf86b8f836c03a25a9c835f33ec21c8c52e4288d2d2e09c825b305234860";</script>
 </body>
 </html>
