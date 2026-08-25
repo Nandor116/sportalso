@@ -198,7 +198,7 @@ function showView(view) {
 }
 function navigateTo(view) {
   showView(view);
-  if (view === "editor") void fetchFromServer();
+  if (view === "editor") fetchFromServer().catch(e => setStatus("Hiba: " + e.message, "err"));
   if (view === "settings") renderThemeButtons();
 }
 
