@@ -16,7 +16,7 @@
   h2 { margin:0 0 10px; font-size:15px; }
   label { display:block; font-size:12px; color:#57606a; margin:10px 0 3px; }
   label:first-child { margin-top:0; }
-  input[type=text], input[type=password], input[type=datetime-local], input[type=url], textarea {
+  input[type=text], input[type=password], input[type=url], textarea {
     width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px; background:#fff;
   }
   textarea { resize:vertical; min-height:60px; font-family:inherit; }
@@ -36,23 +36,39 @@
   .img-row .img-thumb { width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--line); flex-shrink:0; display:none; }
   .compress-info { font-size:11px; color:#57606a; margin-top:2px; }
 
-  /* login screen */
+  /* login */
   .login-wrap { max-width:380px; margin:60px auto 0; }
   .login-wrap section { padding:24px; }
   .login-wrap h2 { font-size:20px; text-align:center; margin-bottom:16px; }
   .login-err { background:#ffebe9; border:1px solid #ff818266; color:#cf222e; border-radius:8px; padding:10px 14px; font-size:14px; margin-bottom:12px; display:none; }
   .login-wrap button.primary { width:100%; padding:12px; font-size:16px; margin-top:12px; }
-  .login-or { text-align:center; color:#57606a; font-size:13px; margin:10px 0; }
+
+  /* dashboard tiles */
+  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .tile {
+    border:1px solid var(--line); border-radius:12px; padding:20px 16px; background:var(--bg);
+    cursor:pointer; text-align:center; transition:box-shadow .15s, border-color .15s;
+  }
+  .tile:hover { border-color:var(--accent-light); box-shadow:0 2px 12px rgba(101,48,113,.15); }
+  .tile-icon { font-size:32px; margin-bottom:8px; }
+  .tile-title { font-size:15px; font-weight:700; }
+  .tile-desc { font-size:12px; color:#57606a; margin-top:4px; }
+  .tile.disabled { opacity:.4; cursor:default; pointer-events:none; }
+
+  /* sub-page header */
+  .sub-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .sub-header .back { background:none; border:none; font-size:22px; cursor:pointer; padding:0 4px; color:var(--accent); font-weight:700; }
+  .sub-header h2 { margin:0; font-size:18px; }
 </style>
 </head>
 <body>
 <header>
-  <span>Sportalsó — koncert admin</span>
+  <span>Sportalsó — admin</span>
   <button id="logoutBtn" style="display:none">Kijelentkezés</button>
 </header>
 <main>
 
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN -->
   <div id="loginScreen" class="login-wrap">
     <section>
       <h2>Bejelentkezés</h2>
@@ -71,14 +87,42 @@
     </section>
   </div>
 
-  <!-- ADMIN UI -->
-  <div id="adminUi" style="display:none">
-    <section>
-      <h2>Koncertek</h2>
-      <div id="events"></div>
-      <button class="small" id="addEvent">+ Új koncert</button>
-    </section>
+  <!-- DASHBOARD -->
+  <div id="dashboard" style="display:none">
+    <div class="tiles">
+      <div class="tile" id="tileEvents">
+        <div class="tile-icon">{"\uD83D\uDCC5"}</div>
+        <div class="tile-title">Események</div>
+        <div class="tile-desc" id="tileEventsDesc">Koncertek kezelése</div>
+      </div>
+      <div class="tile disabled">
+        <div class="tile-icon">{"\u2699\uFE0F"}</div>
+        <div class="tile-title">Beállítások</div>
+        <div class="tile-desc">Hamarosan</div>
+      </div>
+      <div class="tile disabled">
+        <div class="tile-icon">{"\uD83D\uDCCA"}</div>
+        <div class="tile-title">Statisztika</div>
+        <div class="tile-desc">Hamarosan</div>
+      </div>
+      <div class="tile disabled">
+        <div class="tile-icon">{"\uD83D\uDCE8"}</div>
+        <div class="tile-title">Értesítések</div>
+        <div class="tile-desc">Hamarosan</div>
+      </div>
+    </div>
+  </div>
 
+  <!-- EVENT EDITOR -->
+  <div id="editorView" style="display:none">
+    <div class="sub-header">
+      <button class="back" id="backBtn">{"\u2190"}</button>
+      <h2>Események</h2>
+    </div>
+    <section>
+      <div id="events"></div>
+      <button class="small" id="addEvent">+ Új esemény</button>
+    </section>
     <div class="row">
       <button class="primary" id="publish">Publikálás</button>
       <button id="download">Letöltés</button>
@@ -109,6 +153,17 @@ function showLoginErr(msg) {
   el.style.display = msg ? "block" : "none";
 }
 
+// ---------- navigation ----------
+function showView(view) {
+  $("loginScreen").style.display = "none";
+  $("dashboard").style.display = "none";
+  $("editorView").style.display = "none";
+  $("logoutBtn").style.display = "none";
+  if (view === "login") $("loginScreen").style.display = "";
+  if (view === "dashboard") { $("dashboard").style.display = ""; $("logoutBtn").style.display = ""; }
+  if (view === "editor") { $("editorView").style.display = ""; $("logoutBtn").style.display = ""; }
+}
+
 // ---------- persistence ----------
 function saveCreds(remember) {
   const data = {
@@ -119,11 +174,8 @@ function saveCreds(remember) {
     keyhex: $("keyhex").value.trim(),
     remember
   };
-  if (remember) {
-    localStorage.setItem("sportalso_creds", JSON.stringify(data));
-  } else {
-    localStorage.removeItem("sportalso_creds");
-  }
+  if (remember) localStorage.setItem("sportalso_creds", JSON.stringify(data));
+  else localStorage.removeItem("sportalso_creds");
 }
 
 function loadCreds() {
@@ -170,10 +222,7 @@ async function doLogin() {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (r.status === 401) { showLoginErr("Hibás token vagy nincs jogosultság (401)."); setStatus("Sikertelen belépés.", "err"); return; }
-    if (r.status === 404) {
-      currentRepo = repo; currentBranch = "main"; currentPath = "events.json";
-    } else if (r.ok) {
-      const meta = await r.json();
+    if (r.status === 404 || r.ok) {
       currentRepo = repo; currentBranch = "main"; currentPath = "events.json";
     } else {
       showLoginErr(`GitHub hiba: ${r.status}`); setStatus("Sikertelen belépés.", "err"); return;
@@ -183,32 +232,54 @@ async function doLogin() {
   }
 
   saveCreds($("remember").checked);
-  showAdmin();
+  enterDashboard();
 }
 
 $("loginBtn").onclick = doLogin;
 $("keyhex").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+$("token").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
 
-function showAdmin() {
-  $("loginScreen").style.display = "none";
-  $("adminUi").style.display = "";
-  $("logoutBtn").style.display = "";
+function enterDashboard() {
+  showView("dashboard");
   setStatus("Belépve.", "ok");
-  void fetchFromServer();
+  void loadDashboardData();
+}
+
+async function loadDashboardData() {
+  try {
+    const { path } = cfg();
+    const meta = await ghGet(path);
+    if (meta) {
+      const jsonText = atob(meta.content.replace(/\n/g, ""));
+      const data = JSON.parse(jsonText);
+      const count = (data.events || []).length;
+      $("tileEventsDesc").textContent = `${count} esemény`;
+    } else {
+      $("tileEventsDesc").textContent = "Még nincs esemény";
+    }
+  } catch { $("tileEventsDesc").textContent = "Koncertek kezelése"; }
 }
 
 function doLogout() {
   localStorage.removeItem("sportalso_creds");
-  $("loginScreen").style.display = "";
-  $("adminUi").style.display = "none";
-  $("logoutBtn").style.display = "none";
   events = []; serverVersion = 0;
   $("keyhex").value = ""; $("token").value = "";
   $("serverInfo").textContent = "";
   showLoginErr("");
+  showView("login");
   setStatus("Kijelentkezve.", "");
 }
 $("logoutBtn").onclick = doLogout;
+
+// ---------- dashboard -> editor ----------
+$("tileEvents").onclick = () => {
+  showView("editor");
+  void fetchFromServer();
+};
+$("backBtn").onclick = () => {
+  showView("dashboard");
+  void loadDashboardData();
+};
 
 // ---------- github api ----------
 function cfg() {
@@ -235,7 +306,7 @@ async function ghPut(path, content, sha, message) {
   return r.json();
 }
 
-// ---------- image compression via Canvas API ----------
+// ---------- image compression ----------
 function compressImage(file, maxW, maxH, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -291,7 +362,7 @@ function newEvent() {
 function render() {
   const box = $("events");
   box.innerHTML = "";
-  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints a "+ Új koncert" gombra.</p>';
+  if (!events.length) box.innerHTML = '<p class="muted">Még nincs esemény. Kattints a "+ Új esemény" gombra.</p>';
   events.forEach((ev, i) => {
     const div = document.createElement("div");
     div.className = "event";
@@ -308,7 +379,7 @@ function render() {
         <div><label>Megjegyzés</label><input type="text" data-f="note"></div>
       </div>
       <label>Leírás</label>
-      <textarea data-f="description" placeholder="Rövid leírás a koncertről..."></textarea>
+      <textarea data-f="description" placeholder="Rövid leírás..."></textarea>
       <div class="img-row">
         <div class="img-col">
           <label>Borítókép</label>
@@ -323,7 +394,6 @@ function render() {
         <button class="danger small" data-del="${i}">Törlés</button>
       </div>`;
     div.querySelector("[data-f=title]").value = ev.title;
-    // split startsAtLocal into date + time
     const parts = (ev.startsAtLocal || "").split("T");
     div.querySelector("[data-f=startDate]").value = parts[0] || "";
     div.querySelector("[data-f=startTime]").value = parts[1] || "";
@@ -355,9 +425,8 @@ function render() {
         compressInfo.textContent = "Tömörítés...";
         const { blob, width, height } = await compressImage(file, 1200, 900, 0.85);
         const b64 = await blobToBase64(blob);
-        const ext = file.name.split(".").pop() || "jpg";
         ev._imageBase64 = b64;
-        ev._imageFileName = `${ev.id}.${ext}`;
+        ev._imageFileName = `${ev.id}.${(file.name.split(".").pop() || "jpg")}`;
         compressInfo.textContent = `Kész: ${width}\u00d7${height}px, ${Math.round(blob.size / 1024)} KB`;
         thumb.src = URL.createObjectURL(blob);
         thumb.style.display = "block";
@@ -418,7 +487,7 @@ async function fetchFromServer() {
     startsAtLocal: new Date(e.startsAt).toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16)
   }));
   $("serverInfo").textContent =
-    `Szerver: v${serverVersion}, ${events.length} koncert` + (verified ? " \u2022 aláírás \u2713" : "");
+    `Szerver: v${serverVersion}, ${events.length} esemény` + (verified ? " \u2022 aláírás \u2713" : "");
   render();
 }
 
@@ -432,8 +501,7 @@ async function uploadImage(ev) {
   if (!ev._imageBase64) return;
   const imgPath = `images/${ev._imageFileName}`;
   const existing = await ghGet(imgPath);
-  await ghPut(imgPath, ev._imageBase64, existing ? existing.sha : undefined,
-    `Kép: ${ev.title || ev.id}`);
+  await ghPut(imgPath, ev._imageBase64, existing ? existing.sha : undefined, `Kép: ${ev.title || ev.id}`);
   ev.imageUrl = `https://nandor116.github.io/sportalso/${imgPath}`;
   ev._imageBase64 = null;
 }
@@ -480,11 +548,9 @@ $("download").onclick = async () => {
     currentRepo = creds.repo;
     currentBranch = creds.branch || "main";
     currentPath = creds.path || "events.json";
-    showAdmin();
+    enterDashboard();
   } else {
-    $("loginScreen").style.display = "";
-    $("adminUi").style.display = "none";
-    $("logoutBtn").style.display = "none";
+    showView("login");
   }
   setStatus("Kész.");
 })();
