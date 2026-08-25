@@ -1,6 +1,6 @@
 {
-  "version": 10,
-  "generatedAt": "2026-08-25T20:09:47.903Z",
+  "version": 11,
+  "generatedAt": "2026-08-25T20:28:41.969Z",
   "events": [
     {
       "id": "db20e3",
@@ -17,6 +17,14 @@
       "imageUrl": "https://nandor116.github.io/sportalso/images/0ba9f4.jpg",
       "description": "Kapunyitás: 19:00\n20:00 Mad-ness\nhttps://www.facebook.com/MadnessZenekar\n21:15 Pokolgép\nBelépő: 7.500,-\nElővétel: 7.000,-\nhttps://jegy.rock1.hu/pokolgep-esztergom_20260912",
       "ticketUrl": "https://jegy.rock1.hu/pokolgep-esztergom_20260912"
+    },
+    {
+      "id": "b59103",
+      "title": "ALVIN ÉS A MÓKUSOK ★ JUNKIES ★ ESZTERGOM",
+      "startsAt": "2026-10-03T16:00:00.000Z",
+      "imageUrl": "https://nandor116.github.io/sportalso/images/b59103.jpg",
+      "description": "➽ JEGYÉRTÉKESÍTÉS // PRESALE\n➽ ONLINE JEGYEK:\nhttps://alvintickets.com/363-alvin-es-a-mokusok-esztergom\nKedves Barátaink!\n2026. október 3-án visszatérünk hozzátok Esztergomba, a Sportkülsőbe, hogy együtt zárjuk az esztergomi nyarat és mulassunk egy hatalmasat veletek az elmúlt 33 év legjobb Alvin slágereivel! Erre az estére magunkkal visszük a JUNKIES Zenekart is! Várunk Titeket szeretettel!\n➽ Az esti program:\n18:00 Kapunyitás\n19:00 JUNKIES\n20:30 ALVIN ÉS A MÓKUSOK\n➽ JEGYINFORMÁCIÓ // TICKET INFORMATIONS\nFelelősséget csak az Alvintickets-től vásárolt jegyekért tudunk vállalni.\n▲ A jegyedet ne tedd közzé semmilyen felületen\n➽ KORHATÁR A PROGRAMOKRA // AGE LIMIT\n▲ 5 éves kor alatt ingyenes a belépés jeggyel rendelkező felnőtt kíséretében.\n▲ 16 év alatti vendégek (16. életévüket még be nem töltöttek) belépőjeggyel és jeggyel rendelkező felnőtt kísérettel léphetnek be a rendezvényekre vagy szülő által meghatalmazott, jeggyel rendelkező nagykorú kíséretében látogathatják.\n▲ 16 év feletti vendégek (16. életévüket már betöltöttek) belépőjeggyel és akár felnőtt kíséret nélkül is beléphetnek.\n▲ 18 év alatti vendégek (18. életévüket még be nem töltöttek) esetében a helyszíni jegykezelés során megkülönböztető színnel ellátott karszalag felhelyezésére kerül sor, amelynek megállapításához az életkort igazoló okmány (személyi igazolvány vagy útlevél) felmutatására van szükség.\nALVIN ÉS A MÓKUSOK: AKINEK ITT KELL MOST LENNIE (2020) megvásárolható / meghallgatható:\nCD: http://alvinrecords.com/shop.php\nSpotify: https://open.spotify.com/album/0OKvEKx9TFL2SnWhfRXjWG\nKONCERTEN KAPHATÓ ALVINOS CUCCOK: http://bit.ly/2xISYtc\nIratkozz fel a friss videókért: http://bit.ly/2xIqhaQ\nKövess minket a Facebook-on is:\nhttps://www.facebook.com/Alvin.es.a.Mokusok\nALVIN ÉS A MÓKUSOK KONCERTEK:\nhttps://alvintickets.com",
+      "ticketUrl": "https://alvintickets.com/363-alvin-es-a-mokusok-esztergom"
     }
   ]
 }
