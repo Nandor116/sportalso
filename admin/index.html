@@ -296,7 +296,10 @@ function render() {
     div.innerHTML = `
       <div class="row">
         <div><label>Cím</label><input type="text" data-f="title" value=""></div>
-        <div style="max-width:220px"><label>Dátum-idő</label><input type="datetime-local" data-f="startsAtLocal" value=""></div>
+      </div>
+      <div class="row">
+        <div><label>Dátum</label><input type="date" data-f="startDate" value=""></div>
+        <div style="max-width:120px"><label>Idő (24h)</label><input type="text" data-f="startTime" placeholder="18:00" maxlength="5" pattern="[012]\\d:[0-5]\\d" value=""></div>
       </div>
       <div class="row">
         <div><label>Jegylink</label><input type="url" data-f="ticketUrl" placeholder="https://..."></div>
@@ -318,9 +321,22 @@ function render() {
         <button class="danger small" data-del="${i}">Törlés</button>
       </div>`;
     div.querySelector("[data-f=title]").value = ev.title;
+    // split startsAtLocal into date + time
+    const parts = (ev.startsAtLocal || "").split("T");
+    div.querySelector("[data-f=startDate]").value = parts[0] || "";
+    div.querySelector("[data-f=startTime]").value = parts[1] || "";
+
     div.querySelectorAll("[data-f]").forEach(inp => {
-      inp.value = ev[inp.dataset.f] ?? "";
-      inp.addEventListener("input", () => { ev[inp.dataset.f] = inp.value; });
+      const field = inp.dataset.f;
+      inp.addEventListener("input", () => {
+        if (field === "startDate" || field === "startTime") {
+          const dateVal = div.querySelector("[data-f=startDate]").value;
+          const timeVal = div.querySelector("[data-f=startTime]").value;
+          ev.startsAtLocal = dateVal && timeVal ? `${dateVal}T${timeVal}` : dateVal || "";
+        } else {
+          ev[field] = inp.value;
+        }
+      });
     });
     div.querySelector("[data-del]").onclick = () => { events.splice(i, 1); render(); };
 
