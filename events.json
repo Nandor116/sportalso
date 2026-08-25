@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "generatedAt": "2026-08-25T18:22:02.871Z",
+  "generatedAt": "2026-08-25T21:00:00.000Z",
   "events": [
     {
       "id": "f1a2c3",
@@ -55,6 +55,15 @@
       "description": "Adventi hangulat, karÃ¡csonyi dallamok akusztikus elÅadÃ¡sban. ForrÃ³ tea Ã©s finomsÃ¡gok vÃ¡rnak.",
       "ticketUrl": "https://tixa.hu/sportalso",
       "note": "Meleg tea Ã©s finomsÃ¡gok"
+    },
+    {
+      "id": "aa11bb",
+      "title": "Nyárzáró buli",
+      "startsAt": "2026-07-18T18:00:00.000Z",
+      "imageUrl": "https://nandor116.github.io/sportalso/images/f1a2c3.jpg",
+      "description": "A nyár utolsó koncertje a Sportalsó színpadán. Forró hangulat, hideg italok.",
+      "ticketUrl": "",
+      "note": "Belépő ingyenes"
     }
   ]
 }
