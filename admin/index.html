@@ -154,7 +154,8 @@ function showLoginErr(msg) {
 }
 
 // ---------- navigation ----------
-function showView(view) {
+let currentView = "login";
+function showView(view, push) {
   $("loginScreen").style.display = "none";
   $("dashboard").style.display = "none";
   $("editorView").style.display = "none";
@@ -162,6 +163,10 @@ function showView(view) {
   if (view === "login") $("loginScreen").style.display = "";
   if (view === "dashboard") { $("dashboard").style.display = ""; $("logoutBtn").style.display = ""; }
   if (view === "editor") { $("editorView").style.display = ""; $("logoutBtn").style.display = ""; }
+  if (view !== currentView) {
+    currentView = view;
+    if (push !== false) history.pushState({ view }, "", "");
+  }
 }
 
 // ---------- persistence ----------
@@ -280,6 +285,24 @@ $("backBtn").onclick = () => {
   showView("dashboard");
   void loadDashboardData();
 };
+
+// browser back/forward
+window.addEventListener("popstate", e => {
+  const view = e.state?.view || "dashboard";
+  showView(view, false);
+});
+
+// swipe right to go back
+(function() {
+  let x0 = null;
+  $("editorView").addEventListener("touchstart", e => { x0 = e.touches[0].clientX; });
+  $("editorView").addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (dx > 80) { showView("dashboard"); void loadDashboardData(); }
+    x0 = null;
+  });
+})();
 
 // ---------- github api ----------
 function cfg() {
@@ -548,9 +571,11 @@ $("download").onclick = async () => {
     currentRepo = creds.repo;
     currentBranch = creds.branch || "main";
     currentPath = creds.path || "events.json";
+    history.replaceState({ view: "dashboard" }, "", "");
     enterDashboard();
   } else {
-    showView("login");
+    history.replaceState({ view: "login" }, "", "");
+    showView("login", false);
   }
   setStatus("Kész.");
 })();
