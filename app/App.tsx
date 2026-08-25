@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { APP_NAME } from "./config";
+import { APP_NAME, APP_VERSION } from "./config";
 import { EventList, SportEvent, fetchAndVerify, loadCached, lastSync } from "./lib/data";
 import { addToCalendar, openTicket, syncAddedFromCalendar } from "./lib/calendar";
 import { ThemeProvider, useTheme, ThemeMode } from "./lib/theme";
@@ -94,7 +94,20 @@ function AppContent() {
     const res = await fetchAndVerify();
     if (res.list) {
       setList(res.list);
-      void syncAdded(res.list.events);
+      await syncAdded(res.list.events);
+      if (await getAutoAddToCalendar()) {
+        const current = new Set<string>(JSON.parse((await AsyncStorage.getItem(ADDED_KEY)) ?? "[]"));
+        for (const ev of res.list.events) {
+          if (current.has(ev.id)) continue;
+          if (new Date(ev.startsAt) < startOfToday()) continue;
+          try {
+            await addToCalendar(ev);
+            current.add(ev.id);
+          } catch {}
+        }
+        await AsyncStorage.setItem(ADDED_KEY, JSON.stringify([...current]));
+        setAdded(current);
+      }
     }
     setError(res.error ?? null);
     setSynced(await lastSync());
@@ -131,23 +144,19 @@ function AppContent() {
   }
 
   async function addAllUpcoming() {
-    let err: string | null = null;
     setBulkBusy(true);
-    try {
-      for (const ev of upcoming) {
-        if (added.has(ev.id)) continue;
-        try {
-          await addToCalendar(ev);
-          await markAdded(ev.id);
-        } catch (e: any) {
-          err = e?.message ?? String(e);
-          break;
-        }
+    const errors: string[] = [];
+    const toAdd = upcoming.filter((ev) => !added.has(ev.id));
+    for (const ev of toAdd) {
+      try {
+        await addToCalendar(ev);
+        await markAdded(ev.id);
+      } catch (e: any) {
+        errors.push(`${ev.title}: ${e?.message ?? String(e)}`);
       }
-    } finally {
-      setBulkBusy(false);
-      setError(err);
     }
+    setBulkBusy(false);
+    setError(errors.length ? errors.join("\n") : null);
   }
 
   const upcoming = (list?.events ?? [])
@@ -398,10 +407,22 @@ function AppContent() {
             <Text style={[s.settingsLabel, { color: colors.muted, marginTop: 20 }]}>Naptár</Text>
             <Pressable
               style={[s.toggleRow, { borderColor: colors.border }]}
-              onPress={() => {
+              onPress={async () => {
                 const next = !autoAdd;
                 setAutoAdd(next);
                 setAutoAddToCalendar(next);
+                if (next) {
+                  const current = new Set(added);
+                  for (const ev of upcoming) {
+                    if (current.has(ev.id)) continue;
+                    try {
+                      await addToCalendar(ev);
+                      current.add(ev.id);
+                    } catch {}
+                  }
+                  await AsyncStorage.setItem(ADDED_KEY, JSON.stringify([...current]));
+                  setAdded(current);
+                }
               }}
             >
               <Text style={[s.toggleLabel, { color: colors.text }]}>Automatikus naptárhozadás</Text>
@@ -424,6 +445,9 @@ function AppContent() {
             <Pressable style={[s.btn, s.btnBlock, { backgroundColor: colors.accent, borderColor: colors.accent, marginTop: 20 }]} onPress={() => setSettingsOpen(false)}>
               <Text style={s.btnTextPrimary}>Kész</Text>
             </Pressable>
+            <Text style={[s.muted, { color: colors.muted, textAlign: "center", marginTop: 12 }]}>
+              Sportalsó v{APP_VERSION}
+            </Text>
           </ScrollView>
         </View>
       </Modal>

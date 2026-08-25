@@ -30,7 +30,7 @@ const palettes: Record<"light" | "dark" | "oled", Colors> = {
     text: "#f2f2f7",
     border: "#38383a",
     muted: "#8e8e93",
-    accent: "#b47ed4",
+    accent: "#653071",
     statusBar: "light",
   },
   oled: {
@@ -39,7 +39,7 @@ const palettes: Record<"light" | "dark" | "oled", Colors> = {
     text: "#f2f2f7",
     border: "#1c1c1e",
     muted: "#8e8e93",
-    accent: "#b47ed4",
+    accent: "#653071",
     statusBar: "light",
   },
 };

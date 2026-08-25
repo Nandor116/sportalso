@@ -7,5 +7,6 @@ export const PUBLIC_KEY_HEX =
   "9a1daf86b8f836c03a25a9c835f33ec21c8c52e4288d2d2e09c825b305234860";
 
 export const APP_NAME = "Sportalsó";
+export const APP_VERSION = "0.0.4";
 export const VENUE = "Sportalsó";
 export const VENUE_ADDRESS = ""; // pl. "1061 Budapest, Példa utca 1." — naptár location-hez
