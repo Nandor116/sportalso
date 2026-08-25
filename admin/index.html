@@ -6,31 +6,37 @@
 <title>Sportalsó — Admin</title>
 <script src="tweetnacl.min.js"></script>
 <style>
-  :root { --green:#1a7f37; --bg:#f6f8fa; --line:#d0d7de; }
+  :root { --accent:#653071; --accent-light:#b47ed4; --bg:#f6f8fa; --line:#d0d7de; }
   * { box-sizing:border-box; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; margin:0; background:#fff; color:#1f2328; }
-  header { background:var(--green); color:#fff; padding:14px 16px; font-weight:700; font-size:18px; }
+  header { background:var(--accent); color:#fff; padding:14px 16px; font-weight:700; font-size:18px; }
   main { max-width:720px; margin:0 auto; padding:16px; padding-bottom:90px; }
   section { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; background:var(--bg); }
   h2 { margin:0 0 10px; font-size:15px; }
   label { display:block; font-size:12px; color:#57606a; margin:8px 0 3px; }
-  input[type=text], input[type=password], input[type=datetime-local], input[type=url] {
+  input[type=text], input[type=password], input[type=datetime-local], input[type=url], textarea {
     width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px; background:#fff;
   }
+  textarea { resize:vertical; min-height:60px; font-family:inherit; }
   .row { display:flex; gap:8px; } .row > * { flex:1; }
   button {
     padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:#fff;
     font-size:15px; cursor:pointer; font-weight:600;
   }
-  button.primary { background:var(--green); border-color:var(--green); color:#fff; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
   button.danger { color:#cf222e; border-color:#cf222e; background:#fff; }
   button.small { padding:5px 10px; font-size:13px; }
   .event { border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:10px; background:#fff; }
   .status { position:fixed; left:0; right:0; bottom:0; background:#1f2328; color:#fff;
-    padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; }
+    padding:12px 16px; font-size:14px; min-height:48px; display:flex; align-items:center; gap:10px; z-index:999; }
   .ok { color:#7ee787; } .err { color:#ffa198; }
   .muted { color:#57606a; font-size:12px; }
   details summary { cursor:pointer; font-size:14px; font-weight:600; }
+  .img-preview { width:100%; max-height:200px; object-fit:cover; border-radius:6px; border:1px solid var(--line); margin-top:6px; display:none; }
+  .img-row { display:flex; gap:8px; align-items:flex-end; }
+  .img-row .img-col { flex:1; }
+  .img-row .img-thumb { width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--line); flex-shrink:0; display:none; }
+  .compress-info { font-size:11px; color:#57606a; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -55,7 +61,7 @@
         <input type="checkbox" id="remember"> megjegyzés ezen a készüléken (csak saját telefonon!)
       </label>
       <button class="small" id="saveSetup" style="margin-top:8px">Beállítások mentése</button>
-      <p class="muted">A kulcs és a token alapból csak a munkamenetben él (nem tárolódik). A „megjegyzés” pipával localStorage-ba kerül — ezt csak olyan eszközön pipáld be, ami nálad biztonságban van.</p>
+      <p class="muted">A kulcs és a token alapból csak a munkamenetben él (nem tárolódik). A „megjegyzés" pipával localStorage-ba kerül — ezt csak olyan eszközön pipáld be, ami nálad biztonságban van.</p>
     </section>
   </details>
 
@@ -119,8 +125,6 @@ $("saveSetup").onclick = () => {
 loadSetup();
 
 // ---------- kulcs-alapú feloldás ----------
-// A titkos kulcsból kiszámoljuk a hozzá tartozó nyilvános kulcsot;
-// ha egyezik az appba építettel, a kulcs jó -> szerkesztő feloldva.
 function setAdminUi(open) {
   $("adminUi").style.display = open ? "" : "none";
   $("lockedBox").style.display = open ? "none" : "";
@@ -158,6 +162,54 @@ $("keyfile").addEventListener("change", e => {
   f.text().then(t => { $("keyhex").value = t.trim(); tryUnlock(); });
 });
 
+// ---------- image compression via Canvas API ----------
+function compressImage(file, maxW, maxH, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Nem sikerült betölteni a képet."));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        w = Math.round(w); h = Math.round(h);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        let q = quality;
+        let blob;
+        function tryCompress() {
+          canvas.toBlob(b => {
+            blob = b;
+            if (blob.size > 500000 && q > 0.3) {
+              q -= 0.1;
+              tryCompress();
+            } else {
+              resolve({ blob, width: w, height: h });
+            }
+          }, "image/jpeg", q);
+        }
+        tryCompress();
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const b64 = reader.result.split(",")[1];
+      resolve(b64);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ---------- event editor ----------
 function newEvent() {
   const d = new Date(Date.now() + 7 * 86400000);
@@ -168,14 +220,18 @@ function newEvent() {
     title: "",
     startsAtLocal: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`,
     ticketUrl: "",
-    note: ""
+    note: "",
+    description: "",
+    imageUrl: "",
+    _imageBlob: null,
+    _imageFileName: ""
   };
 }
 
 function render() {
   const box = $("events");
   box.innerHTML = "";
-  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints az „+ Új koncert” gombra.</p>';
+  if (!events.length) box.innerHTML = '<p class="muted">Még nincs koncert. Kattints az „+ Új koncert" gombra.</p>';
   events.forEach((ev, i) => {
     const div = document.createElement("div");
     div.className = "event";
@@ -188,6 +244,17 @@ function render() {
         <div><label>Jegylink (opcionális)</label><input type="url" data-f="ticketUrl" placeholder="https://..."></div>
         <div><label>Megjegyzés (opcionális)</label><input type="text" data-f="note"></div>
       </div>
+      <label>Leírás (opcionális)</label>
+      <textarea data-f="description" placeholder="Rövid leírás a koncertről..."></textarea>
+      <div class="img-row">
+        <div class="img-col">
+          <label>Borítókép (opcionális)</label>
+          <input type="file" accept="image/*" data-img="${i}">
+          <div class="compress-info" data-compressinfo="${i}"></div>
+        </div>
+        <img class="img-thumb" data-imgthumb="${i}">
+      </div>
+      ${ev.imageUrl ? `<img class="img-preview" data-imgpreview="${i}" src="${ev.imageUrl}">` : ''}
       <div style="text-align:right;margin-top:6px">
         <span class="muted">id: ${ev.id}</span>
         <button class="danger small" data-del="${i}">Törlés</button>
@@ -198,6 +265,35 @@ function render() {
       inp.addEventListener("input", () => { ev[inp.dataset.f] = inp.value; });
     });
     div.querySelector("[data-del]").onclick = () => { events.splice(i, 1); render(); };
+
+    // image file handler
+    const imgInput = div.querySelector(`[data-img="${i}"]`);
+    const thumb = div.querySelector(`[data-imgthumb="${i}"]`);
+    const compressInfo = div.querySelector(`[data-compressinfo="${i}"]`);
+    const preview = div.querySelector(`[data-imgpreview="${i}"]`);
+    if (ev.imageUrl && preview) preview.style.display = "block";
+
+    imgInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        compressInfo.textContent = "Tömörítés...";
+        const { blob, width, height } = await compressImage(file, 1200, 900, 0.85);
+        const b64 = await blobToBase64(blob);
+        const ext = file.name.split(".").pop() || "jpg";
+        const fileName = `${ev.id}.${ext}`;
+        ev._imageBlob = blob;
+        ev._imageBase64 = b64;
+        ev._imageFileName = fileName;
+        const kb = Math.round(blob.size / 1024);
+        compressInfo.textContent = `Kész: ${width}×${height}px, ${kb} KB`;
+        thumb.src = URL.createObjectURL(blob);
+        thumb.style.display = "block";
+      } catch (err) {
+        compressInfo.textContent = "Hiba: " + err.message;
+      }
+    });
+
     box.appendChild(div);
   });
 }
@@ -212,6 +308,8 @@ function buildPayload() {
       id: e.id,
       title: e.title.trim(),
       startsAt: new Date(e.startsAtLocal).toISOString(),
+      ...(e.imageUrl ? { imageUrl: e.imageUrl } : {}),
+      ...(e.description.trim() ? { description: e.description.trim() } : {}),
       ...(e.ticketUrl.trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
       ...(e.note.trim() ? { note: e.note.trim() } : {})
     }));
@@ -236,22 +334,32 @@ async function ghGet(path) {
   if (!r.ok) throw new Error(`GitHub GET ${path}: ${r.status}`);
   return r.json();
 }
-async function ghPut(path, text, sha, message) {
+async function ghPut(path, content, sha, message) {
   const { repo, branch, token } = cfg();
   const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message,
-      branch,
-      sha,
-      content: btoa(unescape(encodeURIComponent(text)))
-    })
+    body: JSON.stringify({ message, branch, sha, content })
   });
   if (!r.ok) throw new Error(`GitHub PUT ${path}: ${r.status} ${await r.text()}`);
   return r.json();
 }
 
+async function uploadImage(ev) {
+  if (!ev._imageBase64) return;
+  const { repo, branch, token } = cfg();
+  if (!token) throw new Error("Képfeltöltéshez token szükséges.");
+  const imgPath = `images/${ev._imageFileName}`;
+  const existing = await ghGet(imgPath);
+  await ghPut(imgPath, ev._imageBase64, existing ? existing.sha : undefined,
+    `Kép frissítés: ${ev.title || ev.id}`);
+  const baseUrl = `https://nandor116.github.io/sportalso`;
+  ev.imageUrl = `${baseUrl}/${imgPath}`;
+  ev._imageBlob = null;
+  ev._imageBase64 = null;
+}
+
+// ---------- load from server ----------
 async function fetchFromServer() {
   const { repo, branch, path } = cfg();
   if (!repo) throw new Error("Előbb állítsd be a repót!");
@@ -293,15 +401,19 @@ $("publish").onclick = async () => {
   try {
     const { token } = cfg();
     if (!token) throw new Error("Token nélkül csak a Letöltés gombbal tudsz publikálni.");
+    setStatus("Képek feltöltése...");
+    for (const ev of events) {
+      if (ev._imageBase64) await uploadImage(ev);
+    }
     const json = buildPayload();
     const sig = await sign(json);
     setStatus("Publikálás folyamatban...");
     const metaJson = await ghGet(cfg().path);
     const sigPath = cfg().path.replace(/\.json$/, ".sig");
     const metaSig = await ghGet(sigPath);
-    await ghPut(cfg().path, json, metaJson ? metaJson.sha : undefined,
+    await ghPut(cfg().path, btoa(unescape(encodeURIComponent(json))), metaJson ? metaJson.sha : undefined,
       `Koncert lista frissítés (v${serverVersion + 1})`);
-    await ghPut(sigPath, sig + "\n", metaSig ? metaSig.sha : undefined,
+    await ghPut(sigPath, btoa(sig + "\n"), metaSig ? metaSig.sha : undefined,
       `Aláírás (v${serverVersion + 1})`);
     serverVersion += 1;
     setStatus("Kész! A frissítés már fent van a szerveren. ✓", "ok");
