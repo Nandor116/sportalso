@@ -385,8 +385,7 @@ function cfg() {
 async function ghGet(path) {
   const { repo, branch, token } = cfg();
   const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}&_t=${Date.now()}`, {
-    headers: token ? { Authorization: `Bearer ${token}`, "Cache-Control": "no-cache" } : {},
-    cache: "no-store"
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`GitHub GET ${path}: ${r.status}`);
