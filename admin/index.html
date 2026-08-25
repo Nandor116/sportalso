@@ -566,9 +566,9 @@ function buildPayload() {
     .map(e => ({
       id: e.id, title: e.title.trim(), startsAt: new Date(e.startsAtLocal).toISOString(),
       ...(e.imageUrl ? { imageUrl: e.imageUrl } : {}),
-      ...(e.description.trim() ? { description: e.description.trim() } : {}),
-      ...(e.ticketUrl.trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
-      ...(e.note.trim() ? { note: e.note.trim() } : {})
+      ...((e.description || "").trim() ? { description: e.description.trim() } : {}),
+      ...((e.ticketUrl || "").trim() ? { ticketUrl: e.ticketUrl.trim() } : {}),
+      ...((e.note || "").trim() ? { note: e.note.trim() } : {})
     }));
   return JSON.stringify({ version: serverVersion + 1, generatedAt: new Date().toISOString(), events: clean }, null, 2) + "\n";
 }
@@ -605,6 +605,8 @@ async function fetchFromServer() {
   serverVersion = data.version || 0;
   events = (data.events || []).map(e => ({
     ...e,
+    ticketUrl: e.ticketUrl || "", note: e.note || "", description: e.description || "",
+    imageUrl: e.imageUrl || "",
     startsAtLocal: new Date(e.startsAt).toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 16)
   }));
   $("serverInfo").textContent =
