@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   Modal,
   Platform,
   Pressable,
@@ -278,13 +279,13 @@ function AppContent() {
   ];
 
   return (
-    <View style={[s.root, { backgroundColor: colors.bg }]}>
+    <ImageBackground source={require("./assets/hatter.jpg")} imageStyle={{ resizeMode: "repeat" }} style={[s.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={colors.statusBar} />
       <View style={[s.header, { backgroundColor: colors.accent }]}>
         <Text style={s.headerTitle}>{APP_NAME}</Text>
         <BlurView intensity={40} tint={colors.statusBar === "light" ? "dark" : "light"} style={s.gearBlur}>
           <Pressable onPress={() => setSettingsOpen(true)} hitSlop={12}>
-            <Text style={{ color: "#fff", fontSize: 28 }}>⚙︎</Text>
+            <Text style={{ color: "#fff", fontSize: 28 }}>{"\u2699" + "\uFE0F"}</Text>
           </Pressable>
         </BlurView>
       </View>
@@ -402,7 +403,7 @@ function AppContent() {
           </ScrollView>
         </View>
       </Modal>
-    </View>
+    </ImageBackground>
   );
 }
 

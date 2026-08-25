@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sportalsó",
     "slug": "sportalso",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "hu.sportalso.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCalendarsWriteOnlyAccessDescription": "A koncertek naptárba mentéséhez.",
         "NSCalendarsFullAccessDescription": "A koncertek naptárba mentéséhez.",
@@ -33,7 +33,7 @@
     },
     "android": {
       "package": "hu.sportalso.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#653071",
         "foregroundImage": "./assets/android-icon-foreground.png",
