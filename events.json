@@ -1,60 +1,60 @@
 {
-  "version": 5,
-  "generatedAt": "2026-08-25T21:00:00.000Z",
+  "version": 6,
+  "generatedAt": "2026-08-25T21:30:00.000Z",
   "events": [
     {
       "id": "f1a2c3",
-      "title": "KÃ©k Villamos â akusztik koncert",
+      "title": "Kék Villamos – akusztik koncert",
       "startsAt": "2026-09-12T17:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/f1a2c3.jpg",
-      "description": "A KÃ©k Villamos egyedi akusztikus hangzÃ¡ssal Ã©rkezik a SportalsÃ³ szÃ­npadÃ¡ra. Meleg nyÃ¡resti koncert, garantÃ¡lt jÃ³ hangulat.",
+      "description": "A Kék Villamos egyedi akusztikus hangzással érkezik a Sportalsó színpadára. Meleg nyáresti koncert, garantált jó hangulat.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "AjtÃ³ 18:00 Â· BelÃ©pÅ 2500 Ft"
+      "note": "Ajtó 18:00 · Belépő 2500 Ft"
     },
     {
       "id": "b4e5d6",
-      "title": "Fekete Traktor â rock este",
+      "title": "Fekete Traktor – rock este",
       "startsAt": "2026-10-03T18:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/b4e5d6.jpg",
-      "description": "KemÃ©ny riffek, energikus szÃ­npadi jelenlÃ©t. A Fekete Traktor garantÃ¡lja a rock Ã©lmÃ©nyt.",
+      "description": "Kemény riffek, energikus színpadi jelenlét. A Fekete Traktor garantálja a rock élményt.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "BelÃ©pÅ 3000 Ft"
+      "note": "Belépő 3000 Ft"
     },
     {
       "id": "c7a8f9",
-      "title": "Synthia â szintivÃ¡jv Ã©s DJ set",
+      "title": "Synthia – szintivájv és DJ set",
       "startsAt": "2026-10-24T20:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/c7a8f9.jpg",
-      "description": "RetrÃ³ szintivÃ¡jv hangzÃ¡s Ã©s DJ set hajnalig. Neon fÃ©nyek, analÃ³g szintetizÃ¡torok.",
+      "description": "Retró szintivájv hangzás és DJ set hajnalig. Neon fények, analóg szintetizátorok.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "BelÃ©pÅ 2000 Ft"
+      "note": "Belépő 2000 Ft"
     },
     {
       "id": "d2b3e4",
-      "title": "Borovi JÃ³zsef triÃ³ â jazz est",
+      "title": "Borovi József trió – jazz est",
       "startsAt": "2026-11-07T18:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/d2b3e4.jpg",
-      "description": "MinÅsÃ©gi jazz triÃ³ formÃ¡ciÃ³. Borovi JÃ³zsef zongora, bÅgÅ Ã©s dob varÃ¡zslatos egyÃ¼ttmÅ±kÃ¶dÃ©se.",
+      "description": "Minőségi jazz trió formáció. Borovi József zongora, bőgő és dob varázslatos együttműködése.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "BelÃ©pÅ 2500 Ft"
+      "note": "Belépő 2500 Ft"
     },
     {
       "id": "e5f6a7",
-      "title": "VillÃ¡mhÃ¡borÃº â punk este",
+      "title": "Villámháború – punk este",
       "startsAt": "2026-11-21T19:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/e5f6a7.jpg",
-      "description": "Punk energia a maximumon. RÃ¶vid, de annÃ¡l kemÃ©nyebb szett vÃ¡rhatÃ³.",
+      "description": "Punk energia a maximumon. Rövid, de annál keményebb szett várható.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "BelÃ©pÅ 2000 Ft"
+      "note": "Belépő 2000 Ft"
     },
     {
       "id": "a8b9c0",
-      "title": "KarÃ¡csonyi akusztik est",
+      "title": "Karácsonyi akusztik est",
       "startsAt": "2026-12-19T17:00:00.000Z",
       "imageUrl": "https://nandor116.github.io/sportalso/images/a8b9c0.jpg",
-      "description": "Adventi hangulat, karÃ¡csonyi dallamok akusztikus elÅadÃ¡sban. ForrÃ³ tea Ã©s finomsÃ¡gok vÃ¡rnak.",
+      "description": "Adventi hangulat, karácsonyi dallamok akusztikus előadásban. Forró tea és finomságok várnak.",
       "ticketUrl": "https://tixa.hu/sportalso",
-      "note": "Meleg tea Ã©s finomsÃ¡gok"
+      "note": "Meleg tea és finomságok"
     },
     {
       "id": "aa11bb",
